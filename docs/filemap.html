@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>career-ops — File Map</title>
+<style>
+  :root {
+    --user:#3b82f6; --user-bg:#eff6ff; --user-bd:#bfdbfe;
+    --brain:#0d9488; --brain-bg:#f0fdfa; --brain-bd:#99f6e4;
+    --script:#7c3aed; --script-bg:#f5f3ff; --script-bd:#ddd6fe;
+    --output:#16a34a; --output-bg:#f0fdf4; --output-bd:#bbf7d0;
+    --cfg:#d97706; --cfg-bg:#fffbeb; --cfg-bd:#fde68a;
+    --docs:#6b7280; --docs-bg:#f9fafb; --docs-bd:#e5e7eb;
+    --ci:#db2777; --ci-bg:#fdf2f8; --ci-bd:#fbcfe8;
+    --asset:#0ea5e9; --asset-bg:#f0f9ff; --asset-bd:#bae6fd;
+    --dark:#111827; --border:#e5e7eb; --gray:#6b7280;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-size:13px; background:#f8fafc; color:var(--dark); display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+  /* TOP BAR */
+  .topbar { background:var(--dark); color:#e5e7eb; padding:10px 18px; display:flex; align-items:center; gap:14px; flex-shrink:0; z-index:10; }
+  .topbar h1 { font-size:14px; font-weight:700; color:#fff; }
+  .topbar a { font-size:11px; color:#9ca3af; text-decoration:none; padding:3px 10px; border-radius:20px; background:#374151; }
+  .topbar a:hover { background:#4f46e5; color:#fff; }
+  .search-wrap { margin-left:auto; display:flex; align-items:center; gap:8px; }
+  #search { background:#374151; border:1px solid #4b5563; border-radius:6px; color:#e5e7eb; font-size:12px; padding:5px 10px; width:200px; outline:none; }
+  #search:focus { border-color:#6366f1; }
+  #search::placeholder { color:#9ca3af; }
+
+  /* FILTER ROWS */
+  .filters { background:#1f2937; padding:5px 18px; display:flex; gap:6px; flex-shrink:0; flex-wrap:wrap; align-items:center; border-bottom:1px solid #374151; }
+  .filters:last-of-type { border-bottom:none; }
+  .filters-label { font-size:10px; font-weight:700; color:#6b7280; letter-spacing:.05em; text-transform:uppercase; min-width:52px; }
+  .fp { font-size:10px; font-weight:600; padding:3px 10px; border-radius:20px; cursor:pointer; border:1.5px solid transparent; transition:all .15s; }
+
+  /* Type filter pills */
+  .fp[data-t="all"]    { background:#374151; color:#d1d5db; border-color:#4b5563; }
+  .fp[data-t="user"]   { background:var(--user-bg); color:var(--user); border-color:var(--user-bd); }
+  .fp[data-t="brain"]  { background:var(--brain-bg); color:var(--brain); border-color:var(--brain-bd); }
+  .fp[data-t="script"] { background:var(--script-bg); color:var(--script); border-color:var(--script-bd); }
+  .fp[data-t="cfg"]    { background:var(--cfg-bg); color:var(--cfg); border-color:var(--cfg-bd); }
+  .fp[data-t="docs"]   { background:var(--docs-bg); color:var(--docs); border-color:var(--docs-bd); }
+  .fp[data-t="ci"]     { background:var(--ci-bg); color:var(--ci); border-color:var(--ci-bd); }
+
+  /* Role filter pills */
+  .fp[data-r="all"]       { background:#374151; color:#d1d5db; border-color:#4b5563; }
+  .fp[data-r="configure"] { background:#fef3c7; color:#92400e; border-color:#fde68a; }
+  .fp[data-r="ai"]        { background:#cffafe; color:#164e63; border-color:#a5f3fc; }
+  .fp[data-r="info"]      { background:#f3f4f6; color:#374151; border-color:#d1d5db; }
+  .fp[data-r="system"]    { background:#f5f3ff; color:#5b21b6; border-color:#ddd6fe; }
+
+  .fp.active { opacity:1; box-shadow:0 0 0 2px #6366f1; }
+  .fp:not(.active) { opacity:.65; }
+
+  /* MAIN LAYOUT */
+  .layout { display:flex; flex:1; overflow:hidden; }
+
+  /* TREE */
+  .tree-panel { width:310px; flex-shrink:0; overflow-y:auto; background:#fff; border-right:1px solid var(--border); padding:10px 0; }
+  .tree-panel::-webkit-scrollbar { width:4px; }
+  .tree-panel::-webkit-scrollbar-thumb { background:#d1d5db; border-radius:2px; }
+
+  .dir-label { display:flex; align-items:center; gap:6px; padding:4px 14px; cursor:pointer; font-size:11.5px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:.04em; user-select:none; }
+  .dir-label:hover { background:#f9fafb; }
+  .dir-label .arrow { font-size:9px; color:#9ca3af; transition:transform .15s; }
+  .dir-label.open .arrow { transform:rotate(90deg); }
+  .dir-children { display:none; }
+  .dir-label.open + .dir-children { display:block; }
+
+  .file-row { display:flex; align-items:center; gap:7px; padding:4px 10px 4px 26px; cursor:pointer; transition:background .1s; }
+  .file-row:hover { background:#f3f4f6; }
+  .file-row.active { background:#ede9fe; }
+  .file-row .dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .file-row .name { font-size:11.5px; font-family:'SF Mono',Consolas,monospace; color:#374151; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; min-width:0; }
+  .file-row.hidden { display:none; }
+
+  /* Role indicator dot — right edge of tree row */
+  .role-pip { width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-left:2px; opacity:.85; }
+
+  /* DETAIL PANEL */
+  .detail-panel { flex:1; overflow-y:auto; padding:28px 32px; }
+  .detail-panel::-webkit-scrollbar { width:4px; }
+  .detail-panel::-webkit-scrollbar-thumb { background:#d1d5db; border-radius:2px; }
+
+  .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; height:60%; color:#9ca3af; text-align:center; gap:10px; }
+  .empty-state .big { font-size:48px; }
+  .empty-state p { font-size:13px; }
+
+  .file-card { max-width:720px; }
+  .file-card-header { display:flex; align-items:flex-start; gap:14px; margin-bottom:20px; }
+  .file-icon { width:48px; height:48px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+  .file-card-header h2 { font-size:20px; font-weight:700; font-family:'SF Mono',Consolas,monospace; margin-bottom:4px; }
+  .file-path-full { font-size:11px; color:var(--gray); font-family:monospace; margin-bottom:8px; }
+  .badges-row { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+
+  .type-badge { display:inline-block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:2px 8px; border-radius:4px; border:1.5px solid; }
+  .role-badge { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:2px 8px; border-radius:4px; border:1.5px solid; }
+  .rb-configure { background:#fef3c7; color:#92400e; border-color:#fde68a; }
+  .rb-ai        { background:#cffafe; color:#164e63; border-color:#a5f3fc; }
+  .rb-info      { background:#f3f4f6; color:#4b5563; border-color:#d1d5db; }
+  .rb-system    { background:#f5f3ff; color:#5b21b6; border-color:#ddd6fe; }
+
+  .update-badge { display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; border:1.5px solid; }
+  .ub-safe { background:#dcfce7; color:#166534; border-color:#86efac; }
+  .ub-risk { background:#fee2e2; color:#991b1b; border-color:#fca5a5; }
+  .ub-na   { background:#f3f4f6; color:#6b7280; border-color:#e5e7eb; }
+
+  .section-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--gray); margin:18px 0 8px; }
+  .desc-text { font-size:13px; color:#374151; line-height:1.7; background:#f9fafb; border:1px solid var(--border); border-radius:8px; padding:14px 16px; }
+
+  .tag-row { display:flex; flex-wrap:wrap; gap:6px; }
+  .tag { font-size:11px; font-family:monospace; font-weight:500; padding:3px 9px; border-radius:5px; background:#f3f4f6; color:#374151; border:1px solid #e5e7eb; }
+  .tag.reads    { background:#eff6ff; color:#1e40af; border-color:#bfdbfe; }
+  .tag.writes   { background:#f0fdf4; color:#166534; border-color:#bbf7d0; }
+  .tag.calls    { background:#f5f3ff; color:#5b21b6; border-color:#ddd6fe; }
+  .tag.calledby { background:#fffbeb; color:#92400e; border-color:#fde68a; }
+
+  /* stats bar */
+  .stats { display:flex; gap:10px; flex-wrap:wrap; padding:7px 18px; background:#fff; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .stat { font-size:11px; display:flex; align-items:center; gap:5px; }
+  .stat .dot { width:8px; height:8px; border-radius:50%; }
+  .stat strong { font-weight:700; }
+
+  /* Legend row */
+  .legend { display:flex; gap:14px; flex-wrap:wrap; padding:5px 18px; background:#f9fafb; border-bottom:1px solid var(--border); flex-shrink:0; align-items:center; }
+  .legend-item { display:flex; align-items:center; gap:5px; font-size:10.5px; color:#6b7280; }
+  .legend-item .role-pip { width:8px; height:8px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>career-ops / File Map</h1>
+  <a href="architecture.html">← Architecture Map</a>
+  <div class="search-wrap">
+    <input id="search" type="text" placeholder="Search files…" oninput="filterFiles(this.value)">
+  </div>
+</div>
+
+<div class="filters" id="type-filters">
+  <span class="filters-label">Filter</span>
+  <span class="fp active" data-t="all"    onclick="setTypeFilter('all')">All files</span>
+  <span class="fp" data-t="user"          onclick="setTypeFilter('user')">🔵 User Layer</span>
+  <span class="fp" data-t="brain"         onclick="setTypeFilter('brain')">🟢 Brain Layer</span>
+  <span class="fp" data-t="script"        onclick="setTypeFilter('script')">🟣 Scripts</span>
+  <span class="fp" data-t="cfg"           onclick="setTypeFilter('cfg')">🟠 Config</span>
+  <span class="fp" data-t="docs"          onclick="setTypeFilter('docs')">⚫ Docs/Assets</span>
+  <span class="fp" data-t="ci"            onclick="setTypeFilter('ci')">🔴 CI/GitHub</span>
+</div>
+
+
+<div class="legend">
+  <span style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;">Right dot = how it's used:</span>
+  <span class="legend-item"><span class="role-pip" style="background:#f59e0b;border-radius:50%;display:inline-block;"></span>You configure</span>
+  <span class="legend-item"><span class="role-pip" style="background:#0891b2;border-radius:50%;display:inline-block;"></span>AI instructions</span>
+  <span class="legend-item"><span class="role-pip" style="background:#9ca3af;border-radius:50%;display:inline-block;"></span>Reference only</span>
+  <span class="legend-item"><span class="role-pip" style="background:#7c3aed;border-radius:50%;display:inline-block;"></span>System / auto</span>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="layout">
+  <div class="tree-panel" id="tree"></div>
+  <div class="detail-panel" id="detail">
+    <div class="empty-state">
+      <div class="big">📂</div>
+      <p>Click any file to see what it does,<br>what it reads, and what invokes it.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── FILE CATALOG ─────────────────────────────────────────────────────────────
+// role: "configure" = you edit this  |  "ai" = AI reads/follows this
+//       "info" = reference/docs only |  "system" = runs automatically
+const FILES = [
+  // ROOT — USER
+  { path:"cv.md", type:"user", role:"configure", icon:"📄", desc:"Master CV — the single source of truth for all your experience, metrics, and proof points. Read at the start of every evaluation. Never hardcode metrics anywhere else — always read from here.", reads:[], writes:[], calls:[], calledby:["modes/_shared.md","modes/pdf.md","modes/oferta.md"], update:"safe" },
+  { path:"portals.yml", type:"user", role:"configure", icon:"🔍", desc:"Defines 45+ companies to scan with their ATS type (Greenhouse/Ashby/Lever), API slug, and keyword filters. The scanner reads this file to know where to look and what to surface.", reads:[], writes:[], calls:[], calledby:["scan.mjs","modes/scan.md"], update:"safe" },
+  { path:"article-digest.md", type:"user", role:"configure", icon:"📝", desc:"Optional but powerful. Detailed proof points, metrics, and case studies from your portfolio/articles. Overrides cv.md for specific metrics. Read alongside cv.md in every evaluation.", reads:[], writes:[], calls:[], calledby:["modes/_shared.md"], update:"safe" },
+
+  // ROOT — BRAIN
+  { path:"CLAUDE.md", type:"brain", role:"ai", icon:"🧠", desc:"The agent's standing instructions — automatically loaded into context every session. Contains: data contract rules, scoring system overview, onboarding flow, skill mode routing table, and ethical guidelines. The most important single file in the system.", reads:[], writes:[], calls:["modes/_shared.md","modes/*.md"], calledby:["Claude Code (auto-loaded)"], update:"risk" },
+  { path:"AGENTS.md", type:"brain", role:"ai", icon:"🤖", desc:"Agent-platform-specific instructions that extend CLAUDE.md. Used by non-Claude agents (Gemini, Qwen, etc.). Contains the same core rules formatted for agent SDK contexts.", reads:[], writes:[], calls:[], calledby:["Agent SDK platforms"], update:"risk" },
+  { path:"GEMINI.md", type:"brain", role:"ai", icon:"♊", desc:"Gemini CLI equivalent of CLAUDE.md. Loaded automatically when using Google Gemini CLI in this project directory.", reads:[], writes:[], calls:[], calledby:["Gemini CLI (auto-loaded)"], update:"risk" },
+
+  // ROOT — CONFIG
+  { path:"VERSION", type:"cfg", role:"system", icon:"🏷️", desc:"Plain text file containing the current semantic version (e.g. '1.7.0'). Read by update-system.mjs to compare against the remote version on GitHub.", reads:[], writes:[], calls:[], calledby:["update-system.mjs"], update:"risk" },
+  { path:"package.json", type:"cfg", role:"system", icon:"📦", desc:"Node.js project manifest. Declares Playwright as the main dependency (used by generate-pdf.mjs and liveness-browser.mjs). Also defines the 'doctor' npm script.", reads:[], writes:[], calls:[], calledby:["npm install","doctor.mjs"], update:"risk" },
+  { path:"package-lock.json", type:"cfg", role:"system", icon:"🔒", desc:"Locked exact versions of all npm dependencies. Auto-generated by npm. Ensures everyone using the repo gets identical package versions.", reads:[], writes:[], calls:[], calledby:["npm install"], update:"risk" },
+  { path:".gitignore", type:"cfg", role:"system", icon:"🚫", desc:"Tells Git which files to never track. Key exclusions: output/ (generated PDFs), node_modules/, batch/logs/, .env, .update-dismissed, .update-lock.", reads:[], writes:[], calls:[], calledby:["git"], update:"risk" },
+  { path:".env.example", type:"cfg", role:"configure", icon:"🔑", desc:"Template showing what environment variables the system can use. Copy to .env and fill in values. Currently minimal — mainly for optional API keys.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:".envrc", type:"cfg", role:"system", icon:"⚙️", desc:"direnv configuration. Auto-loads .env variables into your shell when you cd into the project directory. Optional — only relevant if you use direnv.", reads:[".env"], writes:[], calls:[], calledby:["direnv"], update:"risk" },
+  { path:"renovate.json", type:"cfg", role:"system", icon:"🔄", desc:"Renovate bot configuration. Tells the automated dependency updater how to handle npm package updates — which ones to auto-merge, how often to check.", reads:[], writes:[], calls:[], calledby:["Renovate bot"], update:"risk" },
+  { path:".coderabbit.yaml", type:"cfg", role:"system", icon:"🐰", desc:"CodeRabbit AI code review configuration. Controls how the AI reviewer behaves on pull requests — tone, focus areas, which files to ignore.", reads:[], writes:[], calls:[], calledby:["CodeRabbit (on PRs)"], update:"risk" },
+  { path:"release-please-config.json", type:"cfg", role:"system", icon:"🚀", desc:"Release Please configuration. Defines how automated versioning works: which packages to version, the changelog format, and release branch strategy.", reads:[], writes:[], calls:[], calledby:["release-please (GitHub Action)"], update:"risk" },
+  { path:".release-please-manifest.json", type:"cfg", role:"system", icon:"📋", desc:"Tracks the current version for each package managed by release-please. Auto-updated by the release workflow.", reads:[], writes:[], calls:[], calledby:["release-please"], update:"risk" },
+  { path:"flake.nix", type:"cfg", role:"system", icon:"❄️", desc:"Nix development environment definition. Reproducible dev environment for Nix/NixOS users. Optional — only relevant if you use the Nix package manager.", reads:[], writes:[], calls:[], calledby:["nix develop"], update:"risk" },
+  { path:"flake.lock", type:"cfg", role:"system", icon:"❄️", desc:"Locked Nix package versions. Auto-generated companion to flake.nix. Ensures reproducible builds in Nix environments.", reads:[], writes:[], calls:[], calledby:["nix"], update:"risk" },
+
+  // ROOT — DOCS
+  { path:"README.md", type:"docs", role:"info", icon:"📖", desc:"Main project documentation. Overview, quick-start guide, feature list, and links to deeper docs. The first thing anyone sees when visiting the repo.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"README.es.md", type:"docs", role:"info", icon:"🇪🇸", desc:"Spanish translation of README.md. Maintained for the Spanish-speaking community.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"README.cn.md", type:"docs", role:"info", icon:"🇨🇳", desc:"Simplified Chinese translation of README.md.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"README.ja.md", type:"docs", role:"info", icon:"🇯🇵", desc:"Japanese translation of README.md.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"README.ko-KR.md", type:"docs", role:"info", icon:"🇰🇷", desc:"Korean translation of README.md.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"README.pt-BR.md", type:"docs", role:"info", icon:"🇧🇷", desc:"Brazilian Portuguese translation of README.md.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"README.ru.md", type:"docs", role:"info", icon:"🇷🇺", desc:"Russian translation of README.md.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"README.ua.md", type:"docs", role:"info", icon:"🇺🇦", desc:"Ukrainian translation of README.md.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"README.zh-TW.md", type:"docs", role:"info", icon:"🇹🇼", desc:"Traditional Chinese translation of README.md.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"CHANGELOG.md", type:"docs", role:"info", icon:"📜", desc:"Auto-generated changelog. Every version's new features, bug fixes, and breaking changes. Updated automatically by the release-please GitHub Action.", reads:[], writes:[], calls:[], calledby:["release-please"], update:"risk" },
+  { path:"DATA_CONTRACT.md", type:"docs", role:"info", icon:"📜", desc:"The most important documentation file. Defines which files belong to the user layer (never auto-updated) vs. the system layer (auto-updatable). Read this before making any customizations.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"CONTRIBUTING.md", type:"docs", role:"info", icon:"🤝", desc:"How to contribute: issue-first workflow, PR process, CI requirements, coding standards.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"CONTRIBUTORS.md", type:"docs", role:"info", icon:"👥", desc:"List of everyone who has contributed to the project.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"CODE_OF_CONDUCT.md", type:"docs", role:"info", icon:"📜", desc:"Contributor Covenant 2.1. Community standards, enforcement process, and reporting contacts.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"GOVERNANCE.md", type:"docs", role:"info", icon:"🏛️", desc:"Project governance model: BDFL structure with contributor ladder (Participant → Contributor → Triager → Reviewer → Maintainer).", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"SECURITY.md", type:"docs", role:"info", icon:"🔒", desc:"Security vulnerability reporting policy. How to disclose issues privately before they're made public.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"SUPPORT.md", type:"docs", role:"info", icon:"💬", desc:"Where to get help: Discord for questions, GitHub Issues for bugs. Keeps the issue tracker clean.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"TRADEMARK.md", type:"docs", role:"info", icon:"™️", desc:"Trademark usage guidelines for the career-ops name and logo.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"LEGAL_DISCLAIMER.md", type:"docs", role:"info", icon:"⚖️", desc:"Legal disclaimers about the tool — not professional career advice, use at your own risk.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"LICENSE", type:"docs", role:"info", icon:"📄", desc:"MIT License. You can use, modify, and distribute freely with attribution.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"CITATION.cff", type:"docs", role:"info", icon:"🎓", desc:"Citation file format for academic/research use. Allows researchers to properly cite career-ops in papers.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+
+  // SCRIPTS
+  { path:"generate-pdf.mjs", type:"script", role:"system", icon:"📄", desc:"HTML → PDF via Playwright Chromium. Reads an HTML file, resolves font paths to absolute file:// URLs, runs ATS normalization (replaces em-dashes, smart quotes, zero-width chars), then renders to PDF. Supports letter and A4 format.", reads:["fonts/","templates/cv-template.html"], writes:["output/*.pdf"], calls:["playwright"], calledby:["modes/pdf.md","modes/auto-pipeline.md"], update:"risk" },
+  { path:"generate-latex.mjs", type:"script", role:"system", icon:"📐", desc:"LaTeX CV validator and compiler. Validates a .tex file against expected structure, then runs pdflatex to compile it. Alternative to the HTML/PDF pipeline for users who prefer LaTeX/Overleaf.", reads:["templates/cv-template.tex"], writes:["output/*.pdf"], calls:["pdflatex"], calledby:["modes/latex.md"], update:"risk" },
+  { path:"scan.mjs", type:"script", role:"system", icon:"🔍", desc:"Zero-token portal scanner. Hits Greenhouse, Ashby, and Lever job APIs directly — no LLM involved, zero token cost. Reads portals.yml for company configs, deduplicates against scan-history.tsv, and returns new job listings.", reads:["portals.yml","data/scan-history.tsv","providers/"], writes:["data/scan-history.tsv"], calls:["providers/greenhouse.mjs","providers/ashby.mjs","providers/lever.mjs"], calledby:["modes/scan.md"], update:"risk" },
+  { path:"merge-tracker.mjs", type:"script", role:"system", icon:"🔀", desc:"Safely merges TSV rows from batch/tracker-additions/ into data/applications.md. Handles column-order swap, deduplication, and formatting. Run after every batch of evaluations.", reads:["batch/tracker-additions/*.tsv","data/applications.md"], writes:["data/applications.md"], calls:[], calledby:["modes/auto-pipeline.md (manual step)"], update:"risk" },
+  { path:"verify-pipeline.mjs", type:"script", role:"system", icon:"✅", desc:"Health check script with 63+ validations. Checks: report file naming, required header fields (URL, Legitimacy, Score), canonical status values, tracker row format, TSV consistency. Run anytime to diagnose issues.", reads:["reports/*.md","data/applications.md","templates/states.yml"], writes:[], calls:[], calledby:["CI (test.yml)"], update:"risk" },
+  { path:"dedup-tracker.mjs", type:"script", role:"system", icon:"🗑️", desc:"Removes duplicate rows from data/applications.md based on Company + Role combination. Keeps the most recent entry when duplicates are found. Safe to run multiple times.", reads:["data/applications.md"], writes:["data/applications.md"], calls:[], calledby:["manual / modes/pipeline.md"], update:"risk" },
+  { path:"normalize-statuses.mjs", type:"script", role:"system", icon:"🔧", desc:"Normalizes status values in applications.md to canonical states defined in templates/states.yml. Fixes common variants (e.g. 'applied' → 'Applied', 'In Progress' → 'Interview').", reads:["data/applications.md","templates/states.yml"], writes:["data/applications.md"], calls:[], calledby:["manual"], update:"risk" },
+  { path:"check-liveness.mjs", type:"script", role:"system", icon:"💓", desc:"Entry point for checking if job postings are still active. Accepts a URL or list of URLs. Delegates core logic to liveness-core.mjs. Used by modes/scan.md to filter out closed positions.", reads:[], writes:[], calls:["liveness-core.mjs","liveness-browser.mjs"], calledby:["modes/scan.md"], update:"risk" },
+  { path:"liveness-core.mjs", type:"script", role:"system", icon:"💡", desc:"Core liveness detection logic shared between check-liveness.mjs and the browser variant. Implements the signal-priority rule: expired signals win over generic 'Apply' button text.", reads:[], writes:[], calls:[], calledby:["check-liveness.mjs","liveness-browser.mjs"], update:"risk" },
+  { path:"liveness-browser.mjs", type:"script", role:"system", icon:"🌐", desc:"Browser-based liveness checker using Playwright. Navigates to a job URL and takes a snapshot to determine if the posting is still active. More reliable than static fetch for SPA-based job boards.", reads:[], writes:[], calls:["playwright","liveness-core.mjs"], calledby:["check-liveness.mjs"], update:"risk" },
+  { path:"analyze-patterns.mjs", type:"script", role:"system", icon:"📊", desc:"Analyzes your application history and outputs JSON with: rejection rates by archetype, score distribution, average time-to-response, top companies by score, and targeting recommendations.", reads:["data/applications.md","reports/*.md"], writes:[], calls:[], calledby:["modes/patterns.md"], update:"risk" },
+  { path:"followup-cadence.mjs", type:"script", role:"system", icon:"📅", desc:"Calculates follow-up urgency for all active applications. Outputs JSON with: overdue applications, days since last contact, recommended follow-up dates.", reads:["data/applications.md","data/follow-ups.md"], writes:[], calls:[], calledby:["modes/followup.md"], update:"risk" },
+  { path:"update-system.mjs", type:"script", role:"system", icon:"⬆️", desc:"Safe auto-updater. Fetches latest from your GitHub fork (pn54-boop/career-ops), checks out only SYSTEM_PATHS files, validates no user files were touched, runs npm install, and commits. Has backup branch + rollback support.", reads:["VERSION"], writes:["VERSION","modes/","templates/","scripts"], calls:["git","npm"], calledby:["CLAUDE.md (session start check)","manual"], update:"risk" },
+  { path:"cv-sync-check.mjs", type:"script", role:"system", icon:"🔗", desc:"Validates that cv.md and article-digest.md are in sync. Warns if metrics in article-digest.md appear newer or conflict with cv.md.", reads:["cv.md","article-digest.md"], writes:[], calls:[], calledby:["modes/_shared.md (session start)"], update:"risk" },
+  { path:"doctor.mjs", type:"script", role:"system", icon:"🩺", desc:"System health checker. Verifies all required dependencies are installed: Node.js version, Playwright, browser binaries, and font files. Run when something isn't working as expected.", reads:["package.json","fonts/"], writes:[], calls:["playwright"], calledby:["npm run doctor",".claude/settings.local.json (hook)"], update:"risk" },
+  { path:"test-all.mjs", type:"script", role:"system", icon:"🧪", desc:"Comprehensive test suite with 63+ checks. Tests: report format compliance, tracker structure, canonical state validation, TSV format, script availability. Run by CI on every PR.", reads:["reports/","data/applications.md","templates/"], writes:[], calls:["verify-pipeline.mjs"], calledby:["CI (.github/workflows/test.yml)"], update:"risk" },
+  { path:"gemini-eval.mjs", type:"script", role:"system", icon:"♊", desc:"Evaluation harness for testing the Gemini CLI integration. Runs test evaluations through the Gemini path to verify modes/gemini/ compatibility.", reads:[], writes:[], calls:[], calledby:["manual / CI"], update:"risk" },
+
+  // MODES — English
+  { path:"modes/_shared.md", type:"brain", role:"ai", icon:"🧩", desc:"Foundation context loaded before most modes. Contains: scoring system (A-F blocks), writing style calibration logic, ATS compatibility rules, global NEVER/ALWAYS rules, tool usage guide, and professional writing standards. The largest single instruction file.", reads:[], writes:[], calls:["modes/_profile.md","cv.md","article-digest.md"], calledby:["most modes"], update:"risk" },
+  { path:"modes/_profile.md", type:"user", role:"configure", icon:"👤", desc:"YOUR customization file — never auto-updated. Contains: your target archetypes, adaptive framing per role type, exit narrative, cross-cutting advantage, portfolio links, comp targets, negotiation scripts, location policy, and writing style cache.", reads:[], writes:[], calls:[], calledby:["modes/_shared.md (always read after)"], update:"safe" },
+  { path:"modes/_profile.template.md", type:"brain", role:"info", icon:"📋", desc:"Template for _profile.md. Copied to modes/_profile.md on first run if the file doesn't exist. Contains placeholder instructions for every customizable section.", reads:[], writes:[], calls:[], calledby:["onboarding flow"], update:"risk" },
+  { path:"modes/auto-pipeline.md", type:"brain", role:"ai", icon:"⚡", desc:"Full automatic pipeline orchestrator. Steps: (0) extract JD via Playwright/WebFetch, (1) run A-G evaluation, (2) save report .md, (3) generate PDF, (4) draft application answers if score ≥ 4.5, (5) update tracker TSV.", reads:["modes/_shared.md","modes/oferta.md","modes/pdf.md"], writes:["reports/","batch/tracker-additions/"], calls:["generate-pdf.mjs"], calledby:["SKILL.md (auto-detected URL/JD)"], update:"risk" },
+  { path:"modes/oferta.md", type:"brain", role:"ai", icon:"⭐", desc:"Full A-G evaluation blocks. Block A: role summary & archetype. B: CV match table with gaps. C: level strategy. D: comp research (WebSearch). E: CV customization plan. F: STAR+R interview stories. G: posting legitimacy assessment.", reads:["cv.md","modes/_shared.md","modes/_profile.md"], writes:["reports/"], calls:["WebSearch"], calledby:["modes/auto-pipeline.md","SKILL.md (/oferta)"], update:"risk" },
+  { path:"modes/ofertas.md", type:"brain", role:"ai", icon:"⚖️", desc:"Multi-offer comparison mode. Takes 2+ evaluated offers and produces a ranked comparison table with normalized scores, trade-off analysis, and a recommended prioritization order.", reads:["modes/_shared.md","reports/"], writes:[], calls:[], calledby:["SKILL.md (/ofertas)"], update:"risk" },
+  { path:"modes/pdf.md", type:"brain", role:"ai", icon:"📄", desc:"CV tailoring and PDF generation. Steps: extract JD keywords, detect archetype, rewrite summary, reorder bullets by relevance, build competency grid, inject keywords into HTML template, call generate-pdf.mjs.", reads:["cv.md","config/profile.yml","templates/cv-template.html"], writes:["output/*.html","output/*.pdf"], calls:["generate-pdf.mjs"], calledby:["modes/auto-pipeline.md","SKILL.md (/pdf)"], update:"risk" },
+  { path:"modes/latex.md", type:"brain", role:"ai", icon:"📐", desc:"LaTeX CV generation variant. Reads cv.md + profile, tailors to JD, generates .tex file, validates structure, and compiles via generate-latex.mjs. Used when config/profile.yml has output_format: latex.", reads:["cv.md","templates/cv-template.tex"], writes:["output/*.tex","output/*.pdf"], calls:["generate-latex.mjs"], calledby:["modes/auto-pipeline.md","SKILL.md (/latex)"], update:"risk" },
+  { path:"modes/apply.md", type:"brain", role:"ai", icon:"✍️", desc:"Live application assistant. Navigates to the application form, reads each field with Playwright, generates tailored answers using the JD + CV context, then STOPS before submitting. User reviews and clicks submit manually.", reads:["cv.md","modes/_shared.md","reports/ (current job)"], writes:[], calls:["Playwright (browser)"], calledby:["SKILL.md (/apply)"], update:"risk" },
+  { path:"modes/scan.md", type:"brain", role:"ai", icon:"🔍", desc:"Portal scan orchestration. Calls scan.mjs zero-token scanner, deduplicates results against scan-history.tsv, surfaces new postings, and optionally populates data/pipeline.md for batch evaluation.", reads:["portals.yml","data/scan-history.tsv"], writes:["data/pipeline.md","data/scan-history.tsv"], calls:["scan.mjs"], calledby:["SKILL.md (/scan)"], update:"risk" },
+  { path:"modes/pipeline.md", type:"brain", role:"ai", icon:"📥", desc:"Batch URL processor. Reads data/pipeline.md, evaluates each URL in sequence (or via subagent for 3+), saves reports, generates PDFs, and removes processed URLs from the inbox.", reads:["data/pipeline.md","modes/_shared.md"], writes:["reports/","batch/tracker-additions/"], calls:["modes/auto-pipeline.md"], calledby:["SKILL.md (/pipeline)"], update:"risk" },
+  { path:"modes/batch.md", type:"brain", role:"ai", icon:"⚡", desc:"Parallel batch processor. Spawns multiple worker subagents simultaneously to evaluate large sets of URLs faster. Uses batch/batch-runner.sh for orchestration.", reads:["data/pipeline.md","batch/batch-prompt.md"], writes:["reports/","batch/tracker-additions/"], calls:["batch/batch-runner.sh"], calledby:["SKILL.md (/batch)"], update:"risk" },
+  { path:"modes/contacto.md", type:"brain", role:"ai", icon:"🔗", desc:"LinkedIn outreach mode. For a given company/role, finds relevant contacts via WebSearch, then drafts a personalized connection request or cold message using your writing style.", reads:["cv.md","modes/_shared.md","config/profile.yml"], writes:[], calls:["WebSearch"], calledby:["SKILL.md (/contacto)"], update:"risk" },
+  { path:"modes/deep.md", type:"brain", role:"ai", icon:"🔭", desc:"Deep company research mode. Produces a structured research brief: company overview, product/market position, recent news, funding/financials, culture signals, interview culture, red flags, and strategic fit for your profile.", reads:[], writes:[], calls:["WebSearch"], calledby:["SKILL.md (/deep)"], update:"risk" },
+  { path:"modes/interview-prep.md", type:"brain", role:"ai", icon:"🎤", desc:"Generates a company-specific interview prep document. Includes: likely interview questions by round, recommended STAR stories from your story bank, company-specific research, and prep recommendations.", reads:["interview-prep/story-bank.md","cv.md"], writes:["interview-prep/{company}-{role}.md"], calls:["WebSearch"], calledby:["SKILL.md (/interview-prep)"], update:"risk" },
+  { path:"modes/tracker.md", type:"brain", role:"ai", icon:"📊", desc:"Application status overview. Reads applications.md and renders a summary: pipeline stage breakdown, score distribution, recent activity, stale applications, and pattern observations.", reads:["data/applications.md"], writes:[], calls:[], calledby:["SKILL.md (/tracker)"], update:"risk" },
+  { path:"modes/patterns.md", type:"brain", role:"ai", icon:"📈", desc:"Rejection and targeting analysis. Invokes analyze-patterns.mjs, interprets the JSON output, and provides actionable recommendations: which archetypes convert best, which companies to target more, what to fix in your targeting.", reads:["data/applications.md"], writes:[], calls:["analyze-patterns.mjs"], calledby:["SKILL.md (/patterns)"], update:"risk" },
+  { path:"modes/followup.md", type:"brain", role:"ai", icon:"📬", desc:"Follow-up cadence tracker. Invokes followup-cadence.mjs, identifies overdue applications, generates draft follow-up emails for each, and updates data/follow-ups.md.", reads:["data/applications.md","data/follow-ups.md"], writes:["data/follow-ups.md"], calls:["followup-cadence.mjs"], calledby:["SKILL.md (/followup)"], update:"risk" },
+  { path:"modes/training.md", type:"brain", role:"ai", icon:"🎓", desc:"Course/certification evaluator. Given a course name/URL, assesses: relevance to your target archetypes, time-to-value ratio, market signal strength, and whether it fills a real gap or is a vanity cert.", reads:["config/profile.yml","modes/_profile.md"], writes:[], calls:["WebSearch"], calledby:["SKILL.md (/training)"], update:"risk" },
+  { path:"modes/project.md", type:"brain", role:"ai", icon:"🛠️", desc:"Portfolio project evaluator. Given a project idea, assesses: recruiter signal strength, time investment vs. value, which archetypes it helps, and what to build/showcase to maximize impact.", reads:["cv.md","config/profile.yml"], writes:[], calls:[], calledby:["SKILL.md (/project)"], update:"risk" },
+  { path:"modes/update.md", type:"brain", role:"ai", icon:"⬆️", desc:"System update mode. Invokes update-system.mjs check/apply/rollback. Shows a diff of what will change before applying, runs the safety validation, and confirms what was updated.", reads:["VERSION"], writes:[], calls:["update-system.mjs"], calledby:["SKILL.md (/update)"], update:"risk" },
+
+  // MODES — German
+  { path:"modes/de/_shared.md", type:"brain", role:"ai", icon:"🇩🇪", desc:"German equivalent of modes/_shared.md. Native German scoring rules and vocabulary for the DACH market (Austria, Germany, Switzerland).", reads:[], writes:[], calls:[], calledby:["modes/de/angebot.md","modes/de/bewerben.md"], update:"risk" },
+  { path:"modes/de/angebot.md", type:"brain", role:"ai", icon:"🇩🇪", desc:"German job offer evaluation (equivalent of oferta.md). A-G blocks in German with DACH-specific scoring adjustments.", reads:["modes/de/_shared.md"], writes:[], calls:[], calledby:["SKILL.md (when German JD detected)"], update:"risk" },
+  { path:"modes/de/bewerben.md", type:"brain", role:"ai", icon:"🇩🇪", desc:"German application assistant (equivalent of apply.md). Handles German application forms and cover letter conventions.", reads:["modes/de/_shared.md"], writes:[], calls:[], calledby:["SKILL.md (German mode)"], update:"risk" },
+  { path:"modes/de/pipeline.md", type:"brain", role:"ai", icon:"🇩🇪", desc:"German pipeline processor (equivalent of pipeline.md). Processes German-language job URLs.", reads:["modes/de/_shared.md"], writes:[], calls:[], calledby:["SKILL.md (German mode)"], update:"risk" },
+  { path:"modes/de/README.md", type:"docs", role:"info", icon:"📖", desc:"Documentation for the German mode: when to use it, DACH-specific vocabulary list, market context.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+
+  // MODES — French
+  { path:"modes/fr/_shared.md", type:"brain", role:"ai", icon:"🇫🇷", desc:"French equivalent of _shared.md for the Francophone market. Includes: CDI/CDD, convention collective SYNTEC, RTT, mutuelle, prévoyance, 13e mois.", reads:[], writes:[], calls:[], calledby:["modes/fr/offre.md","modes/fr/postuler.md"], update:"risk" },
+  { path:"modes/fr/offre.md", type:"brain", role:"ai", icon:"🇫🇷", desc:"French job offer evaluation. A-G blocks adapted for French labor law and culture.", reads:["modes/fr/_shared.md"], writes:[], calls:[], calledby:["SKILL.md (French mode)"], update:"risk" },
+  { path:"modes/fr/postuler.md", type:"brain", role:"ai", icon:"🇫🇷", desc:"French application assistant. Handles French application forms and lettre de motivation conventions.", reads:["modes/fr/_shared.md"], writes:[], calls:[], calledby:["SKILL.md (French mode)"], update:"risk" },
+  { path:"modes/fr/pipeline.md", type:"brain", role:"ai", icon:"🇫🇷", desc:"French pipeline processor.", reads:["modes/fr/_shared.md"], writes:[], calls:[], calledby:["SKILL.md (French mode)"], update:"risk" },
+  { path:"modes/fr/README.md", type:"docs", role:"info", icon:"📖", desc:"Documentation for the French mode.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+
+  // MODES — Japanese
+  { path:"modes/ja/_shared.md", type:"brain", role:"ai", icon:"🇯🇵", desc:"Japanese equivalent of _shared.md for the Japan market. Includes: 正社員, 業務委託, 賞与, 退職金, みなし残業, 年俸制.", reads:[], writes:[], calls:[], calledby:["modes/ja/kyujin.md","modes/ja/oubo.md"], update:"risk" },
+  { path:"modes/ja/kyujin.md", type:"brain", role:"ai", icon:"🇯🇵", desc:"Japanese job evaluation (求人 = job posting). A-G blocks adapted for Japan's job market culture.", reads:["modes/ja/_shared.md"], writes:[], calls:[], calledby:["SKILL.md (Japanese mode)"], update:"risk" },
+  { path:"modes/ja/oubo.md", type:"brain", role:"ai", icon:"🇯🇵", desc:"Japanese application assistant (応募 = application). Handles Japanese application forms.", reads:["modes/ja/_shared.md"], writes:[], calls:[], calledby:["SKILL.md (Japanese mode)"], update:"risk" },
+  { path:"modes/ja/pipeline.md", type:"brain", role:"ai", icon:"🇯🇵", desc:"Japanese pipeline processor.", reads:["modes/ja/_shared.md"], writes:[], calls:[], calledby:["SKILL.md (Japanese mode)"], update:"risk" },
+  { path:"modes/ja/README.md", type:"docs", role:"info", icon:"📖", desc:"Documentation for the Japanese mode.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+
+  // MODES — pt, ru, tr, ua
+  { path:"modes/pt/_shared.md", type:"brain", role:"ai", icon:"🇧🇷", desc:"Portuguese equivalent of _shared.md for Brazil/Portugal market.", reads:[], writes:[], calls:[], calledby:["modes/pt/*.md"], update:"risk" },
+  { path:"modes/pt/oferta.md", type:"brain", role:"ai", icon:"🇧🇷", desc:"Portuguese job evaluation.", reads:["modes/pt/_shared.md"], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"modes/pt/aplicar.md", type:"brain", role:"ai", icon:"🇧🇷", desc:"Portuguese application assistant.", reads:["modes/pt/_shared.md"], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"modes/pt/pipeline.md", type:"brain", role:"ai", icon:"🇧🇷", desc:"Portuguese pipeline processor.", reads:["modes/pt/_shared.md"], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"modes/ru/_shared.md", type:"brain", role:"ai", icon:"🇷🇺", desc:"Russian equivalent of _shared.md.", reads:[], writes:[], calls:[], calledby:["modes/ru/*.md"], update:"risk" },
+  { path:"modes/ru/oferta.md", type:"brain", role:"ai", icon:"🇷🇺", desc:"Russian job evaluation.", reads:["modes/ru/_shared.md"], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"modes/ru/apply.md", type:"brain", role:"ai", icon:"🇷🇺", desc:"Russian application assistant.", reads:["modes/ru/_shared.md"], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"modes/ru/interview-prep.md", type:"brain", role:"ai", icon:"🇷🇺", desc:"Russian interview prep mode.", reads:["modes/ru/_shared.md"], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"modes/ru/pipeline.md", type:"brain", role:"ai", icon:"🇷🇺", desc:"Russian pipeline processor.", reads:["modes/ru/_shared.md"], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"modes/tr/_shared.md", type:"brain", role:"ai", icon:"🇹🇷", desc:"Turkish equivalent of _shared.md.", reads:[], writes:[], calls:[], calledby:["modes/tr/*.md"], update:"na" },
+  { path:"modes/tr/is-ilani.md", type:"brain", role:"ai", icon:"🇹🇷", desc:"Turkish job evaluation (iş ilanı = job posting).", reads:["modes/tr/_shared.md"], writes:[], calls:[], calledby:[], update:"na" },
+  { path:"modes/tr/basvuru.md", type:"brain", role:"ai", icon:"🇹🇷", desc:"Turkish application assistant (başvuru = application).", reads:["modes/tr/_shared.md"], writes:[], calls:[], calledby:[], update:"na" },
+  { path:"modes/tr/pipeline.md", type:"brain", role:"ai", icon:"🇹🇷", desc:"Turkish pipeline processor.", reads:["modes/tr/_shared.md"], writes:[], calls:[], calledby:[], update:"na" },
+  { path:"modes/ua/_shared.md", type:"brain", role:"ai", icon:"🇺🇦", desc:"Ukrainian equivalent of _shared.md.", reads:[], writes:[], calls:[], calledby:["modes/ua/*.md"], update:"na" },
+  { path:"modes/ua/oferta.md", type:"brain", role:"ai", icon:"🇺🇦", desc:"Ukrainian job evaluation.", reads:["modes/ua/_shared.md"], writes:[], calls:[], calledby:[], update:"na" },
+  { path:"modes/ua/apply.md", type:"brain", role:"ai", icon:"🇺🇦", desc:"Ukrainian application assistant.", reads:["modes/ua/_shared.md"], writes:[], calls:[], calledby:[], update:"na" },
+  { path:"modes/ua/interview-prep.md", type:"brain", role:"ai", icon:"🇺🇦", desc:"Ukrainian interview prep mode.", reads:["modes/ua/_shared.md"], writes:[], calls:[], calledby:[], update:"na" },
+  { path:"modes/ua/pipeline.md", type:"brain", role:"ai", icon:"🇺🇦", desc:"Ukrainian pipeline processor.", reads:["modes/ua/_shared.md"], writes:[], calls:[], calledby:[], update:"na" },
+
+  // CONFIG
+  { path:"config/profile.yml", type:"user", role:"configure", icon:"⚙️", desc:"Your personal configuration hub. Contains: name, email, phone, LinkedIn, target roles, archetypes with fit ratings, professional headline, exit story, superpowers, proof points, comp targets, location policy, and CV output format.", reads:[], writes:[], calls:[], calledby:["all modes"], update:"safe" },
+  { path:"config/profile.example.yml", type:"brain", role:"info", icon:"📋", desc:"Example profile.yml with all fields and documentation. Copy this to config/profile.yml when setting up. Contains detailed comments explaining each field.", reads:[], writes:[], calls:[], calledby:["onboarding"], update:"risk" },
+
+  // TEMPLATES
+  { path:"templates/cv-template.html", type:"brain", role:"ai", icon:"🎨", desc:"HTML CV template with {{placeholders}} for personalized content. Uses Space Grotesk + DM Sans fonts. Single-column ATS-safe layout. Edit here to change CV design.", reads:["fonts/"], writes:[], calls:[], calledby:["modes/pdf.md","generate-pdf.mjs"], update:"risk" },
+  { path:"templates/cv-template.tex", type:"brain", role:"ai", icon:"📐", desc:"LaTeX CV template for Overleaf/pdflatex. Alternative to HTML template for users who prefer LaTeX. Contains same {{placeholders}} for content injection.", reads:[], writes:[], calls:[], calledby:["modes/latex.md","generate-latex.mjs"], update:"risk" },
+  { path:"templates/portals.example.yml", type:"brain", role:"info", icon:"📋", desc:"Example portals.yml with 45+ pre-configured companies. Copy to portals.yml to start. Each entry has: company name, ATS type, API slug, keyword filters, and optional exclude terms.", reads:[], writes:[], calls:[], calledby:["onboarding"], update:"risk" },
+  { path:"templates/states.yml", type:"cfg", role:"system", icon:"📋", desc:"Canonical status values for applications.md: Evaluated, Applied, Responded, Interview, Offer, Rejected, Discarded, SKIP. Source of truth for normalize-statuses.mjs and verify-pipeline.mjs.", reads:[], writes:[], calls:[], calledby:["verify-pipeline.mjs","normalize-statuses.mjs"], update:"risk" },
+  { path:"templates/README.md", type:"docs", role:"info", icon:"📖", desc:"Documentation for the templates directory.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+
+  // PROVIDERS
+  { path:"providers/greenhouse.mjs", type:"script", role:"system", icon:"🌱", desc:"Greenhouse ATS API integration. Fetches all job postings for a company using their Greenhouse board token. Returns structured job objects with title, URL, department, location, and posting date.", reads:["providers/_http.mjs","providers/_types.js"], writes:[], calls:[], calledby:["scan.mjs"], update:"risk" },
+  { path:"providers/ashby.mjs", type:"script", role:"system", icon:"🌿", desc:"Ashby ATS API integration. Hits Ashby's public job board API to retrieve postings. Handles Ashby's specific pagination and response format.", reads:["providers/_http.mjs","providers/_types.js"], writes:[], calls:[], calledby:["scan.mjs"], update:"risk" },
+  { path:"providers/lever.mjs", type:"script", role:"system", icon:"⚙️", desc:"Lever ATS API integration. Fetches postings from Lever's public jobs API endpoint. Normalizes Lever's response format to the shared job object schema.", reads:["providers/_http.mjs","providers/_types.js"], writes:[], calls:[], calledby:["scan.mjs"], update:"risk" },
+  { path:"providers/local-parser.mjs", type:"script", role:"system", icon:"📁", desc:"Parses locally-saved JD files from the jds/ directory. Allows offline evaluation of job descriptions saved as .txt or .md files.", reads:["jds/"], writes:[], calls:[], calledby:["scan.mjs","modes/pipeline.md"], update:"risk" },
+  { path:"providers/_http.mjs", type:"script", role:"system", icon:"🔌", desc:"Shared HTTP utilities used by all ATS provider modules. Handles request throttling, retry logic, timeout, and error normalization.", reads:[], writes:[], calls:[], calledby:["providers/greenhouse.mjs","providers/ashby.mjs","providers/lever.mjs"], update:"risk" },
+  { path:"providers/_types.js", type:"script", role:"system", icon:"📝", desc:"Shared type definitions for job objects returned by provider modules. Defines the normalized job schema: { id, title, url, company, location, postedAt, department }.", reads:[], writes:[], calls:[], calledby:["all providers"], update:"risk" },
+
+  // DASHBOARD
+  { path:"dashboard/main.go", type:"script", role:"system", icon:"🖥️", desc:"Entry point for the Go-based terminal dashboard (TUI). Initializes the Bubble Tea TUI framework and renders the pipeline status view. Run with 'go run ./dashboard'.", reads:["data/applications.md","reports/"], writes:[], calls:["dashboard/internal/"], calledby:["manual"], update:"risk" },
+  { path:"dashboard/internal/model/career.go", type:"script", role:"system", icon:"📊", desc:"Go data models for the dashboard. Parses applications.md markdown table into structured Go structs. Also reads report files to populate the viewer screen.", reads:["data/applications.md","reports/"], writes:[], calls:[], calledby:["dashboard/main.go"], update:"risk" },
+  { path:"dashboard/internal/ui/screens/pipeline.go", type:"script", role:"system", icon:"📋", desc:"Pipeline screen for the TUI. Renders applications.md as an interactive table with filtering and sorting by status, score, company, and date.", reads:[], writes:[], calls:[], calledby:["dashboard/main.go"], update:"risk" },
+  { path:"dashboard/internal/ui/screens/viewer.go", type:"script", role:"system", icon:"📖", desc:"Report viewer screen. Opens and renders evaluation reports (.md files) with syntax highlighting inside the terminal.", reads:[], writes:[], calls:[], calledby:["dashboard/main.go"], update:"risk" },
+  { path:"dashboard/internal/ui/screens/progress.go", type:"script", role:"system", icon:"📈", desc:"Progress visualization screen. Shows pipeline stage counts as a visual progress bar (Evaluated → Applied → Interview → Offer).", reads:[], writes:[], calls:[], calledby:["dashboard/main.go"], update:"risk" },
+  { path:"dashboard/internal/theme/catppuccin.go", type:"script", role:"system", icon:"🎨", desc:"Catppuccin Mocha color theme for the TUI. Defines the color palette used across all dashboard screens.", reads:[], writes:[], calls:[], calledby:["dashboard screens"], update:"risk" },
+  { path:"dashboard/go.mod", type:"cfg", role:"system", icon:"📦", desc:"Go module definition. Declares the module path and Go version requirement, and lists dependencies (Bubble Tea TUI framework, Lipgloss styling).", reads:[], writes:[], calls:[], calledby:["go build"], update:"risk" },
+
+  // BATCH
+  { path:"batch/batch-prompt.md", type:"brain", role:"ai", icon:"⚡", desc:"Prompt template injected into headless batch workers (claude -p). Contains condensed evaluation instructions for non-interactive mode.", reads:[], writes:[], calls:[], calledby:["batch/batch-runner.sh"], update:"risk" },
+  { path:"batch/batch-runner.sh", type:"script", role:"system", icon:"🔄", desc:"Shell script that spawns multiple parallel 'claude -p' workers. Reads URLs from data/pipeline.md, splits them into chunks, and runs each chunk in a separate process for parallel evaluation.", reads:["data/pipeline.md","batch/batch-prompt.md"], writes:["batch/logs/","batch/tracker-additions/"], calls:["claude -p"], calledby:["modes/batch.md"], update:"risk" },
+
+  // SKILLS
+  { path:".claude/skills/career-ops/SKILL.md", type:"brain", role:"ai", icon:"🎯", desc:"Claude Code slash command definition. Defines /career-ops with mode routing table. Loaded when you type /career-ops in Claude Code. Routes $mode to the correct modes/*.md file.", reads:[], writes:[], calls:["modes/*.md"], calledby:["Claude Code (/career-ops)"], update:"risk" },
+  { path:".agents/skills/career-ops/SKILL.md", type:"brain", role:"ai", icon:"🤖", desc:"Agent SDK version of the skill definition. Same routing logic as the Claude Code SKILL.md but formatted for the Anthropic Agent SDK and compatible platforms.", reads:[], writes:[], calls:["modes/*.md"], calledby:["Agent SDK platforms"], update:"risk" },
+  { path:".gemini/skills/career-ops/SKILL.md", type:"brain", role:"ai", icon:"♊", desc:"Gemini CLI version of the skill definition. Used when running career-ops via the Google Gemini CLI tool.", reads:[], writes:[], calls:["modes/*.md"], calledby:["Gemini CLI"], update:"risk" },
+  { path:".qwen/skills/career-ops/SKILL.md", type:"brain", role:"ai", icon:"🤖", desc:"Qwen CLI version of the skill definition. Used when running career-ops via Alibaba's Qwen CLI tool.", reads:[], writes:[], calls:["modes/*.md"], calledby:["Qwen CLI"], update:"risk" },
+  { path:".claude/settings.local.json", type:"cfg", role:"system", icon:"⚙️", desc:"Project-level Claude Code permissions. Currently allows the npm doctor command to run automatically. Safe to add more permissions here without affecting other projects.", reads:[], writes:[], calls:[], calledby:["Claude Code harness"], update:"safe" },
+  { path:".claude/launch.json", type:"cfg", role:"system", icon:"🚀", desc:"Preview server configuration for Claude Code's preview tool. Defines the 'architecture-map' server that serves the docs/ folder on port 3000.", reads:[], writes:[], calls:[], calledby:["preview_start tool"], update:"safe" },
+
+  // CLAUDE PLUGIN
+  { path:".claude-plugin/plugin.json", type:"cfg", role:"system", icon:"🔌", desc:"Claude plugin marketplace metadata. Defines the plugin's name, description, version, and capabilities for listing in the Claude plugin directory.", reads:[], writes:[], calls:[], calledby:["Claude plugin system"], update:"risk" },
+  { path:".claude-plugin/marketplace.json", type:"cfg", role:"system", icon:"🏪", desc:"Plugin marketplace listing information. Contains the public-facing description, screenshots, and categorization for the Claude plugin marketplace.", reads:[], writes:[], calls:[], calledby:["Claude plugin system"], update:"risk" },
+
+  // DOCS
+  { path:"docs/ARCHITECTURE.md", type:"docs", role:"info", icon:"🗺️", desc:"Written architecture documentation. Explains the four-layer model, data flow, and file ownership rules in prose form.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"docs/CUSTOMIZATION.md", type:"docs", role:"info", icon:"🎨", desc:"Customization guide. Step-by-step instructions for personalizing archetypes, scoring weights, CV template design, portal list, and language settings.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"docs/SCRIPTS.md", type:"docs", role:"info", icon:"📜", desc:"Reference documentation for all .mjs scripts. Usage, arguments, input/output, and example commands for each script.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"docs/SETUP.md", type:"docs", role:"info", icon:"🛠️", desc:"Installation and first-run setup guide. Covers: cloning, npm install, Playwright browser install, onboarding steps, and first evaluation.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"docs/architecture.html", type:"docs", role:"info", icon:"🗺️", desc:"Interactive architecture visualization. Shows layers, data flows, modes, and concepts. Open at localhost:3000/architecture.html via the preview server.", reads:[], writes:[], calls:[], calledby:[], update:"safe" },
+  { path:"docs/local-parser-cookbook.md", type:"docs", role:"info", icon:"📖", desc:"How to use the local-parser provider for offline JD processing. Useful when job postings are behind authentication or you want to save JDs locally before evaluating.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+
+  // FONTS
+  { path:"fonts/dm-sans-latin.woff2", type:"asset", role:"system", icon:"🔤", desc:"DM Sans variable font for CV body text. Latin character set. Used by cv-template.html and loaded by generate-pdf.mjs as a file:// URL.", reads:[], writes:[], calls:[], calledby:["generate-pdf.mjs","templates/cv-template.html"], update:"risk" },
+  { path:"fonts/dm-sans-latin-ext.woff2", type:"asset", role:"system", icon:"🔤", desc:"DM Sans extended Latin characters (accented letters, special chars). Ensures proper rendering of non-ASCII names and words.", reads:[], writes:[], calls:[], calledby:["generate-pdf.mjs"], update:"risk" },
+  { path:"fonts/space-grotesk-latin.woff2", type:"asset", role:"system", icon:"🔤", desc:"Space Grotesk variable font for CV headings (name, section titles). Latin character set.", reads:[], writes:[], calls:[], calledby:["generate-pdf.mjs","templates/cv-template.html"], update:"risk" },
+  { path:"fonts/space-grotesk-latin-ext.woff2", type:"asset", role:"system", icon:"🔤", desc:"Space Grotesk extended Latin characters.", reads:[], writes:[], calls:[], calledby:["generate-pdf.mjs"], update:"risk" },
+
+  // EXAMPLES
+  { path:"examples/cv-example.md", type:"docs", role:"info", icon:"📄", desc:"Example cv.md showing the expected format and structure. Useful reference when setting up or restructuring your CV.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"examples/article-digest-example.md", type:"docs", role:"info", icon:"📝", desc:"Example article-digest.md with populated proof points. Shows how to format metrics and case studies for maximum evaluator impact.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"examples/ats-normalization-test.md", type:"docs", role:"info", icon:"🧪", desc:"Test cases for ATS normalization. Contains examples of problematic characters (em-dashes, smart quotes) and their expected normalized output.", reads:[], writes:[], calls:[], calledby:["test-all.mjs"], update:"risk" },
+  { path:"examples/sample-report.md", type:"docs", role:"info", icon:"📊", desc:"Example evaluation report in the correct format. Shows all A-G blocks, Machine Summary YAML, and required header fields. Use as reference when validating your reports.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"examples/dual-track-engineer-instructor/cv.md", type:"docs", role:"info", icon:"📄", desc:"Example CV for a different persona (engineer/instructor dual track). Shows how to adapt the system for a completely different career profile.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+  { path:"examples/dual-track-engineer-instructor/profile.yml", type:"docs", role:"info", icon:"⚙️", desc:"Example profile.yml for the dual-track persona. Shows how archetypes and targeting look for a non-finance background.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+
+  // GITHUB
+  { path:".github/workflows/test.yml", type:"ci", role:"system", icon:"🧪", desc:"CI workflow that runs test-all.mjs on every push and PR. Fails the build if any of the 63+ pipeline checks fail.", reads:[], writes:[], calls:["test-all.mjs"], calledby:["GitHub Actions (on push/PR)"], update:"risk" },
+  { path:".github/workflows/release.yml", type:"ci", role:"system", icon:"🚀", desc:"Automated release workflow. Uses release-please to bump VERSION, update CHANGELOG.md, and create a GitHub Release when merging to main.", reads:["VERSION","CHANGELOG.md"], writes:["VERSION","CHANGELOG.md"], calls:["release-please"], calledby:["GitHub Actions (on merge to main)"], update:"risk" },
+  { path:".github/workflows/labeler.yml", type:"ci", role:"system", icon:"🏷️", desc:"Auto-labeler for PRs. Uses .github/labeler.yml rules to apply risk-based labels.", reads:[], writes:[], calls:[], calledby:["GitHub Actions (on PR open)"], update:"risk" },
+  { path:".github/workflows/welcome.yml", type:"ci", role:"system", icon:"👋", desc:"Welcome bot for first-time contributors. Posts a friendly message on a contributor's first PR or issue.", reads:[], writes:[], calls:[], calledby:["GitHub Actions (on first contribution)"], update:"risk" },
+  { path:".github/workflows/stale.yml", type:"ci", role:"system", icon:"🍂", desc:"Closes stale issues and PRs. Marks as stale after 30 days of inactivity, closes after 7 more days.", reads:[], writes:[], calls:[], calledby:["GitHub Actions (scheduled)"], update:"risk" },
+  { path:".github/workflows/codeql.yml", type:"ci", role:"system", icon:"🔒", desc:"CodeQL security analysis. Scans JavaScript/TypeScript for security vulnerabilities on every PR.", reads:[], writes:[], calls:[], calledby:["GitHub Actions (on PR)"], update:"risk" },
+  { path:".github/workflows/dependency-review.yml", type:"ci", role:"system", icon:"🔍", desc:"Reviews dependency changes in PRs for known security vulnerabilities. Fails PR if any introduced dependency has a CVE.", reads:[], writes:[], calls:[], calledby:["GitHub Actions (on PR)"], update:"risk" },
+  { path:".github/workflows/sbom.yml", type:"ci", role:"system", icon:"📋", desc:"Generates a Software Bill of Materials (SBOM) on each release. Lists all dependencies and their versions for supply chain security auditing.", reads:[], writes:[], calls:[], calledby:["GitHub Actions (on release)"], update:"risk" },
+  { path:".github/labeler.yml", type:"ci", role:"system", icon:"🏷️", desc:"Rules for the auto-labeler. Maps file paths to PR labels.", reads:[], writes:[], calls:[], calledby:[".github/workflows/labeler.yml"], update:"risk" },
+  { path:".github/dependabot.yml", type:"ci", role:"system", icon:"🤖", desc:"Dependabot configuration. Monitors npm and GitHub Actions dependencies for security updates and opens automated PRs.", reads:[], writes:[], calls:[], calledby:["GitHub (scheduled)"], update:"risk" },
+  { path:".github/FUNDING.yml", type:"ci", role:"system", icon:"💰", desc:"GitHub Sponsors configuration. Enables the 'Sponsor' button on the repository.", reads:[], writes:[], calls:[], calledby:["GitHub"], update:"risk" },
+
+  // USER DATA
+  { path:"data/applications.md", type:"user", role:"configure", icon:"📊", desc:"Master application tracker. Markdown table with columns: #, Date, Company, Role, Score, Status, PDF, Report, Notes. Never add rows manually — use merge-tracker.mjs. You CAN update existing rows (e.g. change status from Evaluated to Applied).", reads:[], writes:[], calls:[], calledby:["merge-tracker.mjs","modes/tracker.md","analyze-patterns.mjs"], update:"safe" },
+  { path:"data/pipeline.md", type:"user", role:"configure", icon:"📥", desc:"URL inbox. Add one job URL per line here, then run /career-ops pipeline to batch evaluate all of them. Entries are removed as they're processed.", reads:[], writes:[], calls:[], calledby:["modes/pipeline.md","modes/scan.md"], update:"safe" },
+  { path:"interview-prep/story-bank.md", type:"user", role:"configure", icon:"🎤", desc:"Accumulated STAR+R stories across all evaluations. Grows automatically as you evaluate more jobs. Review and refine these over time — they become your master interview story library.", reads:[], writes:[], calls:[], calledby:["modes/interview-prep.md","modes/oferta.md"], update:"safe" },
+  { path:"writing-samples/README.md", type:"docs", role:"info", icon:"📖", desc:"Instructions for adding writing samples. Explains what to add (cover letters, LinkedIn About, professional emails) and how the system uses them to calibrate tone.", reads:[], writes:[], calls:[], calledby:[], update:"risk" },
+];
+
+// ── CONSTANTS ────────────────────────────────────────────────────────────────
+const TYPE_COLORS = {
+  user:'#3b82f6', brain:'#0d9488', script:'#7c3aed',
+  cfg:'#d97706', docs:'#6b7280', ci:'#db2777', asset:'#0ea5e9', output:'#16a34a'
+};
+const TYPE_LABELS = {
+  user:'User Layer', brain:'Brain Layer', script:'Script',
+  cfg:'Config', docs:'Docs/Asset', ci:'CI/GitHub', asset:'Asset'
+};
+const UPDATE_LABELS = {
+  safe:'🔒 Safe from updates', risk:'⚠️ Overwritten by updates', na:'✅ Not in update path'
+};
+const ROLE_COLORS  = { configure:'#f59e0b', ai:'#0891b2', info:'#9ca3af', system:'#7c3aed' };
+const ROLE_LABELS  = { configure:'✏️ You configure', ai:'🤖 AI instructions', info:'📖 Reference only', system:'⚙️ System / auto' };
+const ROLE_CLASSES = { configure:'rb-configure', ai:'rb-ai', info:'rb-info', system:'rb-system' };
+
+let activeTypeFilter = 'all';
+let activeFile = null;
+
+// ── BUILD TREE ───────────────────────────────────────────────────────────────
+function buildTree() {
+  const groups = {};
+  FILES.forEach(f => {
+    const parts = f.path.split('/');
+    const group = parts.length === 1 ? '(root)' : parts[0];
+    if (!groups[group]) groups[group] = [];
+    groups[group].push(f);
+  });
+
+  const order = ['(root)','modes','config','templates','providers','dashboard','batch','data','interview-prep','writing-samples','fonts','examples','docs','.claude','.agents','.gemini','.qwen','.claude-plugin','.github'];
+  const tree = document.getElementById('tree');
+  tree.innerHTML = '';
+
+  order.forEach(group => {
+    if (!groups[group]) return;
+    const label = document.createElement('div');
+    label.className = 'dir-label open';
+    label.innerHTML = `<span class="arrow">▶</span>${group === '(root)' ? '/ root' : group}/`;
+    label.onclick = () => label.classList.toggle('open');
+
+    const children = document.createElement('div');
+    children.className = 'dir-children';
+
+    groups[group].forEach(f => {
+      const row = document.createElement('div');
+      row.className = 'file-row';
+      row.dataset.type = f.type;
+      row.dataset.role = f.role;
+      row.dataset.path = f.path;
+      const name = f.path.split('/').pop();
+      const roleColor = ROLE_COLORS[f.role] || '#888';
+      row.innerHTML = `
+        <span class="dot" style="background:${TYPE_COLORS[f.type]||'#888'}"></span>
+        <span class="name">${name}</span>
+        <span class="role-pip" style="background:${roleColor}" title="${ROLE_LABELS[f.role]||f.role}"></span>`;
+      row.onclick = () => showFile(f, row);
+      children.appendChild(row);
+    });
+
+    tree.appendChild(label);
+    tree.appendChild(children);
+  });
+  updateStats();
+}
+
+// ── SHOW FILE ────────────────────────────────────────────────────────────────
+function showFile(f, row) {
+  document.querySelectorAll('.file-row').forEach(r => r.classList.remove('active'));
+  row.classList.add('active');
+  activeFile = f;
+
+  const color    = TYPE_COLORS[f.type] || '#888';
+  const typeLabel = TYPE_LABELS[f.type] || f.type;
+  const ud       = UPDATE_LABELS[f.update] || '';
+  const udClass  = f.update === 'safe' ? 'ub-safe' : f.update === 'na' ? 'ub-na' : 'ub-risk';
+  const roleLabel = ROLE_LABELS[f.role] || f.role;
+  const roleClass = ROLE_CLASSES[f.role] || 'rb-info';
+
+  const makeTagRow = (items, cls, lbl) => items.length
+    ? `<div class="section-label">${lbl}</div><div class="tag-row">${items.map(t=>`<span class="tag ${cls}">${t}</span>`).join('')}</div>`
+    : '';
+
+  document.getElementById('detail').innerHTML = `
+    <div class="file-card">
+      <div class="file-card-header">
+        <div class="file-icon" style="background:${color}22">${f.icon}</div>
+        <div>
+          <h2>${f.path.split('/').pop()}</h2>
+          <div class="file-path-full">${f.path}</div>
+          <div class="badges-row">
+            <span class="type-badge" style="color:${color};border-color:${color}44;background:${color}11">${typeLabel}</span>
+            <span class="role-badge ${roleClass}">${roleLabel}</span>
+            <span class="update-badge ${udClass}">${ud}</span>
+          </div>
+        </div>
+      </div>
+      <div class="section-label">What it does</div>
+      <div class="desc-text">${f.desc}</div>
+      ${makeTagRow(f.reads,   'reads',    'Reads from')}
+      ${makeTagRow(f.writes,  'writes',   'Writes to')}
+      ${makeTagRow(f.calls,   'calls',    'Calls / invokes')}
+      ${makeTagRow(f.calledby,'calledby', 'Invoked by')}
+    </div>`;
+}
+
+// ── FILTER ───────────────────────────────────────────────────────────────────
+function filterFiles(query) {
+  const q = query.toLowerCase();
+  document.querySelectorAll('.file-row').forEach(row => {
+    const path      = row.dataset.path.toLowerCase();
+    const typeMatch = activeTypeFilter === 'all' || row.dataset.type === activeTypeFilter;
+    const textMatch = !q || path.includes(q);
+    row.classList.toggle('hidden', !typeMatch || !textMatch);
+  });
+  updateStats();
+}
+
+function setTypeFilter(t) {
+  activeTypeFilter = t;
+  document.querySelectorAll('.fp[data-t]').forEach(p => p.classList.toggle('active', p.dataset.t === t));
+  filterFiles(document.getElementById('search').value);
+}
+
+// ── STATS ────────────────────────────────────────────────────────────────────
+function updateStats() {
+  const visible = [...document.querySelectorAll('.file-row:not(.hidden)')].length;
+  const total   = FILES.length;
+  const counts  = {};
+  FILES.forEach(f => counts[f.type] = (counts[f.type]||0)+1);
+  document.getElementById('stats').innerHTML =
+    `<div class="stat"><strong>${visible}</strong> / ${total} files shown</div>` +
+    Object.entries(counts).map(([t,n]) =>
+      `<div class="stat"><span class="dot" style="background:${TYPE_COLORS[t]}"></span>${TYPE_LABELS[t]||t}: <strong>${n}</strong></div>`
+    ).join('');
+}
+
+buildTree();
+</script>
+</body>
+</html>

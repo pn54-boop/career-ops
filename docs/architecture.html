@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>career-ops — Architecture Map</title>
+<style>
+  :root {
+    --user:    #3b82f6;
+    --user-bg: #eff6ff;
+    --user-border: #bfdbfe;
+    --brain:   #0d9488;
+    --brain-bg: #f0fdfa;
+    --brain-border: #99f6e4;
+    --script:  #7c3aed;
+    --script-bg: #f5f3ff;
+    --script-border: #ddd6fe;
+    --output:  #16a34a;
+    --output-bg: #f0fdf4;
+    --output-border: #bbf7d0;
+    --warn:    #d97706;
+    --warn-bg: #fffbeb;
+    --gray:    #6b7280;
+    --dark:    #111827;
+    --light:   #f9fafb;
+    --border:  #e5e7eb;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 13px;
+    color: var(--dark);
+    background: #f8fafc;
+    line-height: 1.5;
+  }
+
+  /* ── TOP NAV ── */
+  .topbar {
+    background: var(--dark);
+    color: #e5e7eb;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar h1 { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
+  .topbar span { font-size: 12px; color: #9ca3af; }
+  .nav-pills { display: flex; gap: 6px; margin-left: auto; }
+  .nav-pill {
+    font-size: 11px; font-weight: 500; padding: 4px 12px; border-radius: 20px;
+    cursor: pointer; border: none; background: #374151; color: #d1d5db;
+    transition: all 0.15s;
+  }
+  .nav-pill:hover, .nav-pill.active { background: #4f46e5; color: #fff; }
+
+  /* ── SECTIONS ── */
+  .section { display: none; padding: 28px 28px 48px; max-width: 1200px; margin: 0 auto; }
+  .section.active { display: block; }
+
+  h2 { font-size: 18px; font-weight: 700; color: var(--dark); margin-bottom: 6px; }
+  .sub { font-size: 13px; color: var(--gray); margin-bottom: 24px; }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    margin-bottom: 24px; padding: 12px 16px;
+    background: #fff; border: 1px solid var(--border); border-radius: 8px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── LAYER DIAGRAM ── */
+  .layers { display: flex; flex-direction: column; gap: 16px; }
+
+  .layer {
+    border-radius: 10px; border: 1.5px solid; padding: 16px 18px;
+  }
+  .layer.user   { border-color: var(--user-border);   background: var(--user-bg); }
+  .layer.brain  { border-color: var(--brain-border);  background: var(--brain-bg); }
+  .layer.script { border-color: var(--script-border); background: var(--script-bg); }
+  .layer.output { border-color: var(--output-border); background: var(--output-bg); }
+
+  .layer-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+  }
+  .layer-badge {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; padding: 2px 8px; border-radius: 4px;
+  }
+  .user .layer-badge   { background: var(--user);   color: #fff; }
+  .brain .layer-badge  { background: var(--brain);  color: #fff; }
+  .script .layer-badge { background: var(--script); color: #fff; }
+  .output .layer-badge { background: var(--output); color: #fff; }
+
+  .layer-title { font-size: 13px; font-weight: 600; }
+  .layer-note  { font-size: 11px; color: var(--gray); margin-left: auto; }
+
+  .nodes { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .node {
+    display: flex; flex-direction: column;
+    padding: 8px 12px; border-radius: 6px;
+    border: 1px solid; cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    min-width: 140px; max-width: 200px;
+    position: relative;
+  }
+  .node:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+  .user   .node { background: #fff; border-color: var(--user-border); }
+  .brain  .node { background: #fff; border-color: var(--brain-border); }
+  .script .node { background: #fff; border-color: var(--script-border); }
+  .output .node { background: #fff; border-color: var(--output-border); }
+
+  .node-name { font-size: 11.5px; font-weight: 600; font-family: 'SF Mono', 'Consolas', monospace; }
+  .node-desc { font-size: 10px; color: var(--gray); margin-top: 2px; line-height: 1.4; }
+  .node-tag  {
+    position: absolute; top: -7px; right: 8px;
+    font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .tag-never { background: #fef3c7; color: #b45309; }
+  .tag-auto  { background: #d1fae5; color: #065f46; }
+  .tag-key   { background: #ede9fe; color: #5b21b6; }
+
+  .flow-arrow {
+    text-align: center; font-size: 20px; color: var(--gray);
+    margin: 4px 0; line-height: 1;
+  }
+  .flow-label {
+    text-align: center; font-size: 11px; color: var(--gray);
+    margin-bottom: 4px; font-style: italic;
+  }
+
+  /* ── FLOW DIAGRAM ── */
+  .flows { display: flex; flex-direction: column; gap: 32px; }
+
+  .flow-card {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px 22px;
+  }
+  .flow-card h3 {
+    font-size: 14px; font-weight: 700; margin-bottom: 4px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .flow-trigger {
+    font-size: 10px; font-weight: 600; padding: 2px 8px;
+    border-radius: 4px; background: #f3f4f6; color: var(--gray);
+  }
+  .flow-sub { font-size: 12px; color: var(--gray); margin-bottom: 16px; }
+
+  .pipeline {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 0;
+    margin-top: 12px;
+  }
+  .step {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 10px 14px; border-radius: 8px; border: 1.5px solid;
+    min-width: 110px; text-align: center; background: #fff;
+  }
+  .step-num {
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    color: var(--gray); margin-bottom: 4px;
+  }
+  .step-name { font-size: 11px; font-weight: 600; }
+  .step-file { font-size: 9.5px; color: var(--gray); margin-top: 2px; font-family: monospace; }
+
+  .step.s-input  { border-color: #93c5fd; background: #eff6ff; }
+  .step.s-brain  { border-color: #6ee7b7; background: #f0fdfa; }
+  .step.s-data   { border-color: #c4b5fd; background: #f5f3ff; }
+  .step.s-output { border-color: #86efac; background: #f0fdf4; }
+  .step.s-script { border-color: #fcd34d; background: #fffbeb; }
+
+  .step-arrow { font-size: 18px; color: #d1d5db; padding: 0 4px; flex-shrink: 0; }
+
+  /* ── FILE REFERENCE ── */
+  .file-table { width: 100%; border-collapse: collapse; }
+  .file-table th {
+    text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--gray); padding: 8px 12px;
+    border-bottom: 2px solid var(--border); background: var(--light);
+  }
+  .file-table td {
+    padding: 9px 12px; border-bottom: 1px solid var(--border);
+    font-size: 12px; vertical-align: top;
+  }
+  .file-table tr:hover td { background: #f9fafb; }
+  .file-path { font-family: 'SF Mono', 'Consolas', monospace; font-size: 11.5px; font-weight: 600; }
+  .file-layer {
+    display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px;
+    border-radius: 4px; white-space: nowrap;
+  }
+  .fl-user   { background: var(--user-bg);   color: var(--user);   border: 1px solid var(--user-border); }
+  .fl-brain  { background: var(--brain-bg);  color: var(--brain);  border: 1px solid var(--brain-border); }
+  .fl-script { background: var(--script-bg); color: var(--script); border: 1px solid var(--script-border); }
+  .fl-output { background: var(--output-bg); color: var(--output); border: 1px solid var(--output-border); }
+  .fl-config { background: var(--warn-bg);   color: var(--warn);   border: 1px solid #fde68a; }
+
+  /* ── EXTENSIONS ── */
+  .ext-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .ext-card {
+    background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px;
+  }
+  .ext-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .ext-icon { font-size: 16px; }
+  .ext-card p { font-size: 12px; color: var(--gray); margin-bottom: 12px; line-height: 1.6; }
+  .ext-card code {
+    display: block; background: #1e1e2e; color: #cdd6f4;
+    padding: 10px 12px; border-radius: 6px; font-size: 11px;
+    font-family: 'SF Mono', 'Consolas', monospace; line-height: 1.7;
+    overflow-x: auto;
+  }
+  .code-comment { color: #6c7086; }
+  .code-key { color: #89b4fa; }
+  .code-val { color: #a6e3a1; }
+  .code-str { color: #f9e2af; }
+
+  .hook-list { list-style: none; margin-top: 8px; }
+  .hook-list li {
+    font-size: 11.5px; padding: 5px 0; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .hook-list li:last-child { border: none; }
+  .hook-file { font-family: monospace; font-size: 11px; color: var(--script); white-space: nowrap; }
+
+  /* ── MODES GRID ── */
+  .modes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+  .mode-card {
+    background: #fff; border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; cursor: pointer; transition: all 0.15s;
+  }
+  .mode-card:hover { border-color: var(--brain-border); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .mode-cmd { font-family: monospace; font-size: 12px; font-weight: 700; color: var(--brain); }
+  .mode-desc { font-size: 11px; color: var(--gray); margin-top: 4px; line-height: 1.4; }
+  .mode-file { font-size: 10px; color: #9ca3af; margin-top: 6px; font-family: monospace; }
+  .mode-needs { font-size: 10px; margin-top: 4px; }
+  .badge-shared { background: #f0fdfa; color: var(--brain); border: 1px solid var(--brain-border); padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 600; }
+  .badge-solo   { background: #f5f3ff; color: var(--script); border: 1px solid var(--script-border); padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 600; }
+  .badge-agent  { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>career-ops</h1>
+  <span>Architecture Map</span>
+  <a href="filemap.html" style="margin-left:auto;margin-right:12px;font-size:13px;color:#94a3b8;text-decoration:none;border:1px solid #334155;padding:4px 10px;border-radius:6px;">📂 File Map</a>
+  <div class="nav-pills">
+    <button class="nav-pill active" onclick="show('layers')">Layers</button>
+    <button class="nav-pill" onclick="show('flows')">Data Flows</button>
+    <button class="nav-pill" onclick="show('modes')">Modes</button>
+    <button class="nav-pill" onclick="show('files')">File Reference</button>
+    <button class="nav-pill" onclick="show('extend')">Extend / Build On</button>
+    <button class="nav-pill" onclick="show('concepts')" style="background:#4f46e5;color:#fff;">Agents, Skills &amp; Hooks</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ LAYERS -->
+<div id="layers" class="section active">
+  <h2>System Architecture</h2>
+  <p class="sub">Everything in career-ops lives in one of four layers. Files never cross from the User layer into the Brain/System layer.</p>
+
+  <div class="legend">
+    <div class="legend-item"><div class="dot" style="background:var(--user)"></div> User Layer — your data, never auto-updated</div>
+    <div class="legend-item"><div class="dot" style="background:var(--brain)"></div> Brain Layer — modes, scoring, rules</div>
+    <div class="legend-item"><div class="dot" style="background:var(--script)"></div> Script Layer — Node.js automation</div>
+    <div class="legend-item"><div class="dot" style="background:var(--output)"></div> Output Layer — generated artifacts</div>
+  </div>
+
+  <div class="layers">
+
+    <!-- USER -->
+    <div class="layer user">
+      <div class="layer-header">
+        <span class="layer-badge">User Layer</span>
+        <span class="layer-title">Your Data — Personalization Lives Here</span>
+        <span class="layer-note">🔒 NEVER auto-updated by system updates</span>
+      </div>
+      <div class="nodes">
+        <div class="node">
+          <span class="node-tag tag-key">Source of Truth</span>
+          <span class="node-name">cv.md</span>
+          <span class="node-desc">Master CV — all experience, metrics, proof points. Read before every evaluation.</span>
+        </div>
+        <div class="node">
+          <span class="node-tag tag-key">Config</span>
+          <span class="node-name">config/profile.yml</span>
+          <span class="node-desc">Your name, email, target roles, salary targets, location policy.</span>
+        </div>
+        <div class="node">
+          <span class="node-tag tag-key">Customize</span>
+          <span class="node-name">modes/_profile.md</span>
+          <span class="node-desc">Your archetypes, narrative framing, negotiation scripts, scoring overrides.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">article-digest.md</span>
+          <span class="node-desc">Detailed proof points from portfolio. Overrides cv.md for metrics.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">portals.yml</span>
+          <span class="node-desc">45+ companies to scan. Keywords, Greenhouse/Ashby/Lever API slugs.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">data/pipeline.md</span>
+          <span class="node-desc">URL inbox — paste JDs here, then run /career-ops pipeline.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">data/applications.md</span>
+          <span class="node-desc">Master tracker. Never edit to ADD rows — use merge-tracker.mjs.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">writing-samples/</span>
+          <span class="node-desc">Your past writing. Used to calibrate tone for cover letters.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">interview-prep/</span>
+          <span class="node-desc">story-bank.md + per-company prep docs.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow">↕</div>
+    <div class="flow-label">Claude reads User Layer files before executing any mode</div>
+
+    <!-- BRAIN -->
+    <div class="layer brain">
+      <div class="layer-header">
+        <span class="layer-badge">Brain Layer</span>
+        <span class="layer-title">Modes, Scoring Logic, Rules</span>
+        <span class="layer-note">⚡ Auto-updatable system files</span>
+      </div>
+      <div class="nodes">
+        <div class="node">
+          <span class="node-tag tag-key">Router</span>
+          <span class="node-name">SKILL.md / CLAUDE.md</span>
+          <span class="node-desc">Entry point. Routes /career-ops commands to the right mode file.</span>
+        </div>
+        <div class="node">
+          <span class="node-tag tag-key">Foundation</span>
+          <span class="node-name">modes/_shared.md</span>
+          <span class="node-desc">Scoring system (A-F), global rules, writing style, ATS rules. Always read first.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">modes/auto-pipeline.md</span>
+          <span class="node-desc">Full pipeline: extract → evaluate → save report → PDF → tracker.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">modes/oferta.md</span>
+          <span class="node-desc">A-G evaluation blocks. Called by auto-pipeline and /oferta.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">modes/pdf.md</span>
+          <span class="node-desc">CV tailoring + HTML generation + Playwright PDF export.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">modes/scan.md</span>
+          <span class="node-desc">Orchestrates scan.mjs + dedup + populates pipeline.md.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">modes/pipeline.md</span>
+          <span class="node-desc">Batch-processes URLs from pipeline.md inbox.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">modes/contacto.md</span>
+          <span class="node-desc">LinkedIn outreach: find contacts + draft personalized message.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">modes/tracker.md</span>
+          <span class="node-desc">Status overview of applications.md with patterns.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">+ 9 more modes</span>
+          <span class="node-desc">deep, apply, batch, patterns, followup, training, project, interview-prep, update</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow">↕</div>
+    <div class="flow-label">Modes invoke scripts for heavy lifting</div>
+
+    <!-- SCRIPT -->
+    <div class="layer script">
+      <div class="layer-header">
+        <span class="layer-badge">Script Layer</span>
+        <span class="layer-title">Node.js Automation — Zero-LLM Operations</span>
+        <span class="layer-note">💻 Run with: node script.mjs</span>
+      </div>
+      <div class="nodes">
+        <div class="node">
+          <span class="node-tag tag-key">Core</span>
+          <span class="node-name">generate-pdf.mjs</span>
+          <span class="node-desc">HTML → PDF via Playwright. Normalizes ATS characters. Letter/A4 format.</span>
+        </div>
+        <div class="node">
+          <span class="node-tag tag-key">Core</span>
+          <span class="node-name">scan.mjs</span>
+          <span class="node-desc">Zero-token portal scanner. Hits Greenhouse/Ashby/Lever APIs directly.</span>
+        </div>
+        <div class="node">
+          <span class="node-tag tag-key">Core</span>
+          <span class="node-name">merge-tracker.mjs</span>
+          <span class="node-desc">Merges TSV files from batch/tracker-additions/ into applications.md.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">verify-pipeline.mjs</span>
+          <span class="node-desc">Health check — validates report format, tracker consistency, canonical states.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">check-liveness.mjs</span>
+          <span class="node-desc">Checks if job postings are still active. Uses liveness-core.mjs logic.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">analyze-patterns.mjs</span>
+          <span class="node-desc">JSON output — rejection patterns, archetype hit rates, score distributions.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">followup-cadence.mjs</span>
+          <span class="node-desc">Calculates overdue follow-ups from applications.md.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">update-system.mjs</span>
+          <span class="node-desc">Checks GitHub for new releases. Applies/rolls back system updates safely.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">generate-latex.mjs</span>
+          <span class="node-desc">LaTeX CV validator + pdflatex compiler. Alt to HTML/PDF flow.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">dedup-tracker.mjs</span>
+          <span class="node-desc">Removes duplicate entries from applications.md.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">cv-sync-check.mjs</span>
+          <span class="node-desc">Validates cv.md has no stale metrics vs article-digest.md.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow">↓</div>
+    <div class="flow-label">Scripts write to Output Layer</div>
+
+    <!-- OUTPUT -->
+    <div class="layer output">
+      <div class="layer-header">
+        <span class="layer-badge">Output Layer</span>
+        <span class="layer-title">Generated Artifacts</span>
+        <span class="layer-note">📁 output/ and batch/ are gitignored</span>
+      </div>
+      <div class="nodes">
+        <div class="node">
+          <span class="node-name">output/*.pdf</span>
+          <span class="node-desc">Tailored ATS-optimized CVs. Named: cv-{candidate}-{company}-{date}.pdf</span>
+        </div>
+        <div class="node">
+          <span class="node-name">reports/*.md</span>
+          <span class="node-desc">Full A-G evaluations. Named: {###}-{company}-{date}.md</span>
+        </div>
+        <div class="node">
+          <span class="node-name">batch/tracker-additions/*.tsv</span>
+          <span class="node-desc">Pending tracker rows. Merged into applications.md by merge-tracker.mjs.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">interview-prep/{company}.md</span>
+          <span class="node-desc">Company-specific prep: likely Qs, STAR stories, research notes.</span>
+        </div>
+        <div class="node">
+          <span class="node-name">data/scan-history.tsv</span>
+          <span class="node-desc">Dedup log for scanner — prevents re-surfacing seen postings.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ FLOWS -->
+<div id="flows" class="section">
+  <h2>Data Flows</h2>
+  <p class="sub">What happens step-by-step when you invoke each major command.</p>
+
+  <div class="flows">
+
+    <div class="flow-card">
+      <h3>
+        <span>Auto-Pipeline</span>
+        <span class="flow-trigger">Trigger: paste a URL or JD text</span>
+      </h3>
+      <p class="flow-sub">The most common flow. Paste a LinkedIn/Greenhouse/etc. URL and the whole pipeline runs automatically.</p>
+      <div class="pipeline">
+        <div class="step s-input"><div class="step-num">Input</div><div class="step-name">URL or JD text</div><div class="step-file">your message</div></div>
+        <div class="step-arrow">→</div>
+        <div class="step s-brain"><div class="step-num">Router</div><div class="step-name">SKILL.md</div><div class="step-file">detects auto-pipeline</div></div>
+        <div class="step-arrow">→</div>
+        <div class="step s-brain"><div class="step-num">Fetch</div><div class="step-name">Extract JD</div><div class="step-file">Playwright / WebFetch</div></div>
+        <div class="step-arrow">→</div>
+        <div class="step s-data"><div class="step-num">Read</div><div class="step-name">Load Profile</div><div class="step-file">cv.md + profile.yml + _profile.md</div></div>
+        <div class="step-arrow">→</div>
+        <div class="step s-brain"><div class="step-num">Eval</div><div class="step-name">A-G Blocks</div><div class="step-file">modes/oferta.md</div></div>
+        <div class="step-arrow">→</div>
+        <div class="step s-output"><div class="step-num">Save</div><div class="step-name">Report .md</div><div class="step-file">reports/###-company-date.md</div></div>
+        <div class="step-arrow">→</div>
+        <div class="step s-brain"><div class="step-num">Tailor</div><div class="step-name">CV HTML</div><div class="step-file">modes/pdf.md + cv-template.html</div></div>
+        <div class="step-arrow">→</div>
+        <div class="step s-script"><div class="step-num">Script</div><div class="step-name">generate-pdf</div><div class="step-file">generate-pdf.mjs</div></div>
+        <div class="step-arrow">→</div>
+        <div class="step s-output"><div class="step-num">Write</div><div class="step-name">TSV Row</div><div class="step-file">batch/tracker-additions/</div></div>
+      </div>
+    </div>
+
+    <div class="flow-card">
+      <h3>
+        <span>Portal Scan</span>
+        <span class="flow-trigger">Trigger: /career-ops scan</span>
+      </h3>
+      <p class="flow-sub">Zero-LLM-token scan of Greenhouse, Ashby, and Lever APIs. Surfaces new postings that match your keywords, deduped against scan history.</p>
+      <div class="pipeline">
+        <div class="step s-data"><div class="step-num">Config</div><div class="step-name">portals.yml</div><div class="step-file">companies + keywords</div></div>
+        <div class="step-arrow">→</div>
+        <div class="step s-script"><div class="step-num">Script</div><div class="step-name">scan.mjs</div><div class="step-file">API calls, zero tokens</div></div>
+        <div class="step-arrow">→</div>
+        <div class="step s-data"><div class="step-num">Dedup</div><div class="step-name">scan-history.tsv</div><div class="step-file">filters already-seen</div></div>
+        <div class="step-arrow">→</div>
+        <div class="step s-output"><div class="step-num">Add</div><div class="step-name">pipeline.md</div><div class="step-file">new URLs queued</div></div>
+        <div class="step-arrow">→</div>
+        <div class="step s-brain"><div class="step-num">Process</div><div class="step-name">/pipeline</div><div class="step-file">modes/pipeline.md</div></div>
+        <div class="step-arrow">→</div>
+        <div class="step s-output"><div class="step-num">Auto</div><div class="step-name">Reports + PDFs</div><div class="step-file">reports/ + output/</div></div>
+      </div>
+    </div>
+
+    <div class="flow-card">
+      <h3>
+        <span>Tracker Update</span>
+        <span class="flow-trigger">Trigger: after any evaluation</span>
+      </h3>
+      <p class="flow-sub">Claude never edits applications.md directly to add rows. It writes a TSV file, then merge-tracker.mjs handles the safe merge.</p>
+      <div class="pipeline">
+        <div class="step s-brain"><div class="step-num">Eval done</div><div class="step-name">Claude writes TSV</div><div class="step-file">batch/tracker-additions/</div></div>
+        <div class="step-arrow">→</div>
+        <div class="step s-script"><div class="step-num">Script</div><div class="step-name">merge-tracker</div><div class="step-file">merge-tracker.mjs</div></div>
+        <div class="step-arrow">→</div>
+        <div class="step s-data"><div class="step-num">Update</div><div class="step-name">applications.md</div><div class="step-file">dedup + column swap</div></div>
+        <div class="step-arrow">→</div>
+        <div class="step s-script"><div class="step-num">Verify</div><div class="step-name">verify-pipeline</div><div class="step-file">verify-pipeline.mjs</div></div>
+      </div>
+    </div>
+
+    <div class="flow-card">
+      <h3>
+        <span>System Update</span>
+        <span class="flow-trigger">Trigger: session start (silent) or /career-ops update</span>
+      </h3>
+      <p class="flow-sub">Updates Brain Layer files (modes, scripts) without touching any User Layer files.</p>
+      <div class="pipeline">
+        <div class="step s-script"><div class="step-num">Check</div><div class="step-name">update-system check</div><div class="step-file">GitHub releases API</div></div>
+        <div class="step-arrow">→</div>
+        <div class="step s-brain"><div class="step-num">Diff</div><div class="step-name">Preview changes</div><div class="step-file">system files only</div></div>
+        <div class="step-arrow">→</div>
+        <div class="step s-script"><div class="step-num">Apply</div><div class="step-name">update-system apply</div><div class="step-file">never touches user layer</div></div>
+        <div class="step-arrow">→</div>
+        <div class="step s-output"><div class="step-num">Backup</div><div class="step-name">Rollback available</div><div class="step-file">update-system rollback</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ MODES -->
+<div id="modes" class="section">
+  <h2>All Modes</h2>
+  <p class="sub">Each mode is a markdown file that Claude reads and executes. <span class="badge-shared">+ _shared</span> = also reads _shared.md first. <span class="badge-agent">subagent</span> = spawns a background agent.</p>
+
+  <div class="modes-grid">
+    <div class="mode-card">
+      <div class="mode-cmd">/career-ops {URL or JD}</div>
+      <div class="mode-desc">Full automatic pipeline: evaluate + report + PDF + tracker in one shot.</div>
+      <div class="mode-file">modes/auto-pipeline.md</div>
+      <div class="mode-needs"><span class="badge-shared">+ _shared</span></div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-cmd">/career-ops oferta</div>
+      <div class="mode-desc">A-G evaluation only. No auto PDF. Use when you want to review before generating CV.</div>
+      <div class="mode-file">modes/oferta.md</div>
+      <div class="mode-needs"><span class="badge-shared">+ _shared</span></div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-cmd">/career-ops ofertas</div>
+      <div class="mode-desc">Compare and rank 2+ offers side by side. Useful for prioritizing your pipeline.</div>
+      <div class="mode-file">modes/ofertas.md</div>
+      <div class="mode-needs"><span class="badge-shared">+ _shared</span></div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-cmd">/career-ops pdf</div>
+      <div class="mode-desc">Generate tailored ATS-optimized CV. Reads JD from context or asks for one.</div>
+      <div class="mode-file">modes/pdf.md</div>
+      <div class="mode-needs"><span class="badge-shared">+ _shared</span></div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-cmd">/career-ops pipeline</div>
+      <div class="mode-desc">Process all pending URLs from data/pipeline.md inbox. Batch evaluates.</div>
+      <div class="mode-file">modes/pipeline.md</div>
+      <div class="mode-needs"><span class="badge-shared">+ _shared</span> <span class="badge-agent">subagent</span></div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-cmd">/career-ops scan</div>
+      <div class="mode-desc">Zero-token portal scan via scan.mjs. Surfaces new openings, deduped.</div>
+      <div class="mode-file">modes/scan.md</div>
+      <div class="mode-needs"><span class="badge-shared">+ _shared</span> <span class="badge-agent">subagent</span></div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-cmd">/career-ops batch</div>
+      <div class="mode-desc">Parallel batch processing with multiple workers. For large URL sets.</div>
+      <div class="mode-file">modes/batch.md</div>
+      <div class="mode-needs"><span class="badge-shared">+ _shared</span></div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-cmd">/career-ops contacto</div>
+      <div class="mode-desc">LinkedIn power move: find relevant contacts at a company + draft outreach.</div>
+      <div class="mode-file">modes/contacto.md</div>
+      <div class="mode-needs"><span class="badge-shared">+ _shared</span></div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-cmd">/career-ops apply</div>
+      <div class="mode-desc">Live application assistant. Reads form fields, generates answers. Stops before submit.</div>
+      <div class="mode-file">modes/apply.md</div>
+      <div class="mode-needs"><span class="badge-shared">+ _shared</span> <span class="badge-agent">subagent</span></div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-cmd">/career-ops deep</div>
+      <div class="mode-desc">Deep company research: culture, financials, recent news, team, interview intel.</div>
+      <div class="mode-file">modes/deep.md</div>
+      <div class="mode-needs"><span class="badge-solo">standalone</span></div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-cmd">/career-ops interview-prep</div>
+      <div class="mode-desc">Generates a company-specific prep doc: likely Qs, STAR stories, red flags.</div>
+      <div class="mode-file">modes/interview-prep.md</div>
+      <div class="mode-needs"><span class="badge-solo">standalone</span></div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-cmd">/career-ops tracker</div>
+      <div class="mode-desc">Status overview of your full pipeline with pattern observations.</div>
+      <div class="mode-file">modes/tracker.md</div>
+      <div class="mode-needs"><span class="badge-solo">standalone</span></div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-cmd">/career-ops patterns</div>
+      <div class="mode-desc">Analyze rejection trends, score distributions, archetype hit rates.</div>
+      <div class="mode-file">modes/patterns.md</div>
+      <div class="mode-needs"><span class="badge-solo">standalone</span></div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-cmd">/career-ops followup</div>
+      <div class="mode-desc">Flag overdue follow-ups and generate draft messages for each.</div>
+      <div class="mode-file">modes/followup.md</div>
+      <div class="mode-needs"><span class="badge-solo">standalone</span></div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-cmd">/career-ops training</div>
+      <div class="mode-desc">Evaluate a course or certification against your target roles and gaps.</div>
+      <div class="mode-file">modes/training.md</div>
+      <div class="mode-needs"><span class="badge-solo">standalone</span></div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-cmd">/career-ops project</div>
+      <div class="mode-desc">Evaluate a portfolio project idea: ROI on time, signal to recruiters, gaps it fills.</div>
+      <div class="mode-file">modes/project.md</div>
+      <div class="mode-needs"><span class="badge-solo">standalone</span></div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-cmd">/career-ops update</div>
+      <div class="mode-desc">Check for and apply system updates. Shows diff before applying.</div>
+      <div class="mode-file">modes/update.md</div>
+      <div class="mode-needs"><span class="badge-solo">standalone</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ FILE REF -->
+<div id="files" class="section">
+  <h2>File Reference</h2>
+  <p class="sub">Every file in the repo, what it does, which layer it belongs to, and whether you should ever edit it.</p>
+
+  <table class="file-table">
+    <thead>
+      <tr>
+        <th>Path</th>
+        <th>Layer</th>
+        <th>What it does</th>
+        <th>You edit it?</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="file-path">cv.md</td><td><span class="file-layer fl-user">User</span></td><td>Master CV. Source of truth for all metrics and experience.</td><td>✅ Yes — keep it current</td></tr>
+      <tr><td class="file-path">config/profile.yml</td><td><span class="file-layer fl-user">User</span></td><td>Your name, email, target roles, comp targets, location policy.</td><td>✅ Yes — your main config</td></tr>
+      <tr><td class="file-path">modes/_profile.md</td><td><span class="file-layer fl-user">User</span></td><td>Archetypes, narrative framing, negotiation scripts, scoring overrides.</td><td>✅ Yes — customize freely</td></tr>
+      <tr><td class="file-path">article-digest.md</td><td><span class="file-layer fl-user">User</span></td><td>Detailed proof points from portfolio. Overrides cv.md for metrics.</td><td>✅ Yes — add project writeups</td></tr>
+      <tr><td class="file-path">portals.yml</td><td><span class="file-layer fl-user">User</span></td><td>Companies and keywords for the scanner. 45+ pre-configured.</td><td>✅ Yes — add/remove companies</td></tr>
+      <tr><td class="file-path">data/pipeline.md</td><td><span class="file-layer fl-user">User</span></td><td>URL inbox. Paste JDs here, then run /career-ops pipeline.</td><td>✅ Yes — add URLs here</td></tr>
+      <tr><td class="file-path">data/applications.md</td><td><span class="file-layer fl-user">User</span></td><td>Master application tracker. Never add rows manually.</td><td>⚠️ Update existing rows only</td></tr>
+      <tr><td class="file-path">data/follow-ups.md</td><td><span class="file-layer fl-user">User</span></td><td>Follow-up history log managed by /followup mode.</td><td>⚠️ Let Claude manage it</td></tr>
+      <tr><td class="file-path">data/scan-history.tsv</td><td><span class="file-layer fl-output">Output</span></td><td>Dedup log for scanner. Prevents re-surfacing seen postings.</td><td>❌ Auto-managed</td></tr>
+      <tr><td class="file-path">writing-samples/</td><td><span class="file-layer fl-user">User</span></td><td>Your past writing. Used to calibrate tone and style.</td><td>✅ Yes — add samples</td></tr>
+      <tr><td class="file-path">interview-prep/story-bank.md</td><td><span class="file-layer fl-user">User</span></td><td>Accumulated STAR+R stories. Grows with each evaluation.</td><td>✅ Review and refine</td></tr>
+      <tr><td class="file-path">jds/</td><td><span class="file-layer fl-user">User</span></td><td>Local JD files. Reference as local:jds/filename in pipeline.md.</td><td>✅ Yes — paste JD text here</td></tr>
+      <tr><td class="file-path">modes/_shared.md</td><td><span class="file-layer fl-brain">Brain</span></td><td>Scoring system (A-F), global rules, writing style guidelines.</td><td>❌ System file — edit _profile.md instead</td></tr>
+      <tr><td class="file-path">modes/auto-pipeline.md</td><td><span class="file-layer fl-brain">Brain</span></td><td>Full pipeline orchestration: extract → evaluate → report → PDF → tracker.</td><td>❌ System file</td></tr>
+      <tr><td class="file-path">modes/oferta.md</td><td><span class="file-layer fl-brain">Brain</span></td><td>A-G evaluation blocks with full scoring logic.</td><td>❌ System file</td></tr>
+      <tr><td class="file-path">modes/pdf.md</td><td><span class="file-layer fl-brain">Brain</span></td><td>CV tailoring logic + HTML generation instructions.</td><td>❌ System file</td></tr>
+      <tr><td class="file-path">modes/scan.md</td><td><span class="file-layer fl-brain">Brain</span></td><td>Portal scanning orchestration.</td><td>❌ System file</td></tr>
+      <tr><td class="file-path">modes/de/ fr/ ja/ etc.</td><td><span class="file-layer fl-brain">Brain</span></td><td>Localized mode files for DACH, French, Japanese job markets.</td><td>❌ System files</td></tr>
+      <tr><td class="file-path">templates/cv-template.html</td><td><span class="file-layer fl-brain">Brain</span></td><td>HTML CV template with {{placeholders}}. Used by pdf mode.</td><td>✅ Edit for design changes</td></tr>
+      <tr><td class="file-path">templates/cv-template.tex</td><td><span class="file-layer fl-brain">Brain</span></td><td>LaTeX/Overleaf CV template. Used when output_format: latex.</td><td>✅ Edit for LaTeX design</td></tr>
+      <tr><td class="file-path">templates/states.yml</td><td><span class="file-layer fl-config">Config</span></td><td>Canonical status values for applications.md tracker.</td><td>⚠️ Edit carefully</td></tr>
+      <tr><td class="file-path">templates/portals.example.yml</td><td><span class="file-layer fl-brain">Brain</span></td><td>Example portals config. Copy to portals.yml to customize.</td><td>❌ Don't edit — copy it</td></tr>
+      <tr><td class="file-path">generate-pdf.mjs</td><td><span class="file-layer fl-script">Script</span></td><td>HTML → PDF via Playwright. ATS normalization. Letter/A4 format.</td><td>❌ System script</td></tr>
+      <tr><td class="file-path">scan.mjs</td><td><span class="file-layer fl-script">Script</span></td><td>Zero-token Greenhouse/Ashby/Lever API scanner.</td><td>❌ System script</td></tr>
+      <tr><td class="file-path">merge-tracker.mjs</td><td><span class="file-layer fl-script">Script</span></td><td>Merges TSV files from batch/tracker-additions/ → applications.md.</td><td>❌ System script</td></tr>
+      <tr><td class="file-path">verify-pipeline.mjs</td><td><span class="file-layer fl-script">Script</span></td><td>63+ health checks: report format, tracker, canonical states.</td><td>❌ System script</td></tr>
+      <tr><td class="file-path">analyze-patterns.mjs</td><td><span class="file-layer fl-script">Script</span></td><td>Outputs JSON: rejection patterns, archetype hit rates, score stats.</td><td>❌ System script</td></tr>
+      <tr><td class="file-path">followup-cadence.mjs</td><td><span class="file-layer fl-script">Script</span></td><td>Calculates overdue follow-ups from applications.md.</td><td>❌ System script</td></tr>
+      <tr><td class="file-path">update-system.mjs</td><td><span class="file-layer fl-script">Script</span></td><td>Check/apply/rollback system updates from GitHub.</td><td>❌ System script</td></tr>
+      <tr><td class="file-path">output/*.pdf</td><td><span class="file-layer fl-output">Output</span></td><td>Tailored CVs. Gitignored. Named: cv-{name}-{company}-{date}.pdf</td><td>❌ Generated</td></tr>
+      <tr><td class="file-path">reports/*.md</td><td><span class="file-layer fl-output">Output</span></td><td>Full A-G evaluation reports. Named: {###}-{company}-{date}.md</td><td>✅ Review and annotate</td></tr>
+      <tr><td class="file-path">batch/tracker-additions/*.tsv</td><td><span class="file-layer fl-output">Output</span></td><td>Pending tracker rows. Run merge-tracker.mjs to apply.</td><td>❌ Auto-written by Claude</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ EXTEND -->
+<div id="extend" class="section">
+  <h2>Extend &amp; Build On</h2>
+  <p class="sub">career-ops is designed to be extended. Here are the main ways to plug in new tools, agents, and automations.</p>
+
+  <div class="ext-grid">
+
+    <div class="ext-card">
+      <h3><span class="ext-icon">🔌</span> Add a New Mode</h3>
+      <p>Create a new <code>.md</code> file in <code>modes/</code> and add a route to <code>SKILL.md</code>. The mode file receives the user's input via context and has access to all User Layer files.</p>
+      <code><span class="code-comment"># modes/salary-negotiation.md</span>
+<span class="code-key">## When to invoke</span>
+<span class="code-val">User says "negotiate offer" or pastes offer letter</span>
+
+<span class="code-key">## What to read</span>
+<span class="code-val">config/profile.yml  → comp targets</span>
+<span class="code-val">reports/latest      → score + role context</span>
+
+<span class="code-key">## What to output</span>
+<span class="code-val">Counter-offer strategy + draft email</span></code>
+    </div>
+
+    <div class="ext-card">
+      <h3><span class="ext-icon">🤖</span> Build an External Agent</h3>
+      <p>Any tool that can read markdown files can integrate with career-ops. The data layer is plain files — no database, no API required.</p>
+      <code><span class="code-comment"># Python agent reading career-ops data</span>
+<span class="code-key">import</span> yaml, pathlib
+
+base = pathlib.Path(<span class="code-str">"C:/Users/patri/career-ops"</span>)
+
+<span class="code-comment"># Read profile</span>
+profile = yaml.safe_load(
+  (base / <span class="code-str">"config/profile.yml"</span>).read_text()
+)
+
+<span class="code-comment"># Read tracker</span>
+tracker = (base / <span class="code-str">"data/applications.md"</span>).read_text()
+
+<span class="code-comment"># Read all reports</span>
+reports = list((base / <span class="code-str">"reports"</span>).glob(<span class="code-str">"*.md"</span>))</code>
+    </div>
+
+    <div class="ext-card">
+      <h3><span class="ext-icon">📡</span> Key Data Interfaces</h3>
+      <p>The files below are the stable "API surface" — structured data you can read/write from any external tool.</p>
+      <ul class="hook-list">
+        <li><span class="hook-file">data/pipeline.md</span> <span>Add URLs here to queue for evaluation. One URL per line.</span></li>
+        <li><span class="hook-file">batch/tracker-additions/*.tsv</span> <span>Write TSV rows here to safely add tracker entries.</span></li>
+        <li><span class="hook-file">data/scan-history.tsv</span> <span>Read to check seen postings. Write to mark as seen.</span></li>
+        <li><span class="hook-file">config/profile.yml</span> <span>Structured YAML — read to understand candidate preferences.</span></li>
+        <li><span class="hook-file">reports/*.md</span> <span>Structured markdown with ## Machine Summary YAML block for downstream parsing.</span></li>
+        <li><span class="hook-file">analyze-patterns.mjs</span> <span>Run for JSON output on rejection patterns and score stats.</span></li>
+        <li><span class="hook-file">followup-cadence.mjs</span> <span>Run for JSON output on overdue follow-ups.</span></li>
+      </ul>
+    </div>
+
+    <div class="ext-card">
+      <h3><span class="ext-icon">🔄</span> Automate with /schedule or /loop</h3>
+      <p>Use the built-in Claude Code skills to set up recurring runs — no cron required.</p>
+      <code><span class="code-comment"># In Claude chat:</span>
+
+<span class="code-comment"># Scan every 3 days</span>
+<span class="code-val">/schedule "every 3 days run /career-ops scan"</span>
+
+<span class="code-comment"># Watch pipeline until empty</span>
+<span class="code-val">/loop /career-ops pipeline</span>
+
+<span class="code-comment"># Check follow-ups every Monday</span>
+<span class="code-val">/schedule "every Monday /career-ops followup"</span></code>
+    </div>
+
+    <div class="ext-card">
+      <h3><span class="ext-icon">🌐</span> Add a New Portal to Scan</h3>
+      <p>Edit <code>portals.yml</code> to add any company that uses Greenhouse, Ashby, or Lever. scan.mjs hits their APIs directly — zero tokens, instant results.</p>
+      <code><span class="code-comment"># portals.yml — add a company</span>
+companies:
+  - <span class="code-key">name</span>: <span class="code-str">"The Beach Company"</span>
+    <span class="code-key">ats</span>: <span class="code-str">"greenhouse"</span>
+    <span class="code-key">slug</span>: <span class="code-str">"thebeachcompany"</span>
+    <span class="code-key">keywords</span>:
+      - <span class="code-str">"asset management"</span>
+      - <span class="code-str">"investment"</span>
+      - <span class="code-str">"acquisitions"</span></code>
+    </div>
+
+    <div class="ext-card">
+      <h3><span class="ext-icon">🎨</span> Customize the CV Design</h3>
+      <p>The template is pure HTML/CSS — edit <code>templates/cv-template.html</code> to change fonts, colors, layout. The <code>{{placeholders}}</code> are replaced at generation time.</p>
+      <code><span class="code-comment">/* cv-template.html — change accent color */</span>
+.section-title {
+  color: <span class="code-str">hsl(187, 74%, 32%)</span>;  <span class="code-comment">/* ← teal */</span>
+}
+.job-company {
+  color: <span class="code-str">hsl(270, 70%, 45%)</span>;  <span class="code-comment">/* ← purple */</span>
+}
+
+<span class="code-comment">/* Add a new section placeholder */</span>
+&lt;div class="section"&gt;
+  &lt;div class="section-title"&gt;<span class="code-val">{{SECTION_AWARDS}}</span>&lt;/div&gt;
+  <span class="code-val">{{AWARDS}}</span>
+&lt;/div&gt;</code>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ CONCEPTS -->
+<div id="concepts" class="section">
+  <h2>Agents, Subagents, Skills &amp; Hooks</h2>
+  <p class="sub">The four building blocks of Claude Code automation — explained using career-ops as the live example.</p>
+
+  <style>
+    .concept-grid { display: flex; flex-direction: column; gap: 32px; }
+
+    .concept-card {
+      background: #fff; border: 1px solid var(--border); border-radius: 12px;
+      overflow: hidden;
+    }
+    .concept-header {
+      display: flex; align-items: center; gap: 14px;
+      padding: 18px 22px; border-bottom: 1px solid var(--border);
+    }
+    .concept-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .concept-header h3 { font-size: 17px; font-weight: 700; margin-bottom: 2px; }
+    .concept-header p  { font-size: 12px; color: var(--gray); }
+
+    .concept-body {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+    }
+    .concept-body > div { padding: 18px 22px; }
+    .concept-body > div + div { border-left: 1px solid var(--border); }
+
+    .concept-body h4 {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--gray); margin-bottom: 10px;
+    }
+
+    .concept-body p  { font-size: 12.5px; color: #374151; line-height: 1.7; margin-bottom: 10px; }
+    .concept-body p:last-child { margin-bottom: 0; }
+
+    .concept-body code {
+      display: block; background: #1e1e2e; color: #cdd6f4;
+      padding: 12px 14px; border-radius: 7px; font-size: 11px;
+      font-family: 'SF Mono','Consolas',monospace; line-height: 1.75;
+      overflow-x: auto; margin-top: 6px;
+    }
+
+    .c-green  { background: #dcfce7; }
+    .c-blue   { background: #dbeafe; }
+    .c-purple { background: #ede9fe; }
+    .c-orange { background: #ffedd5; }
+
+    .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .pill {
+      font-size: 10.5px; font-weight: 600; padding: 3px 9px;
+      border-radius: 20px; border: 1px solid;
+    }
+    .pill-g { background: #dcfce7; color: #166534; border-color: #86efac; }
+    .pill-b { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+    .pill-p { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; }
+    .pill-o { background: #ffedd5; color: #9a3412; border-color: #fdba74; }
+
+    .flow-mini {
+      display: flex; align-items: center; gap: 6px;
+      flex-wrap: wrap; margin-top: 10px;
+    }
+    .flow-mini-step {
+      font-size: 10.5px; font-weight: 600; padding: 4px 10px;
+      border-radius: 6px; border: 1.5px solid;
+    }
+    .fms-g { background: #f0fdf4; border-color: #86efac; color: #166534; }
+    .fms-b { background: #eff6ff; border-color: #93c5fd; color: #1e40af; }
+    .fms-p { background: #f5f3ff; border-color: #c4b5fd; color: #5b21b6; }
+    .fms-o { background: #fff7ed; border-color: #fdba74; color: #9a3412; }
+    .fms-arr { color: #9ca3af; font-size: 14px; }
+
+    .file-chip {
+      display: inline-block; font-family: monospace; font-size: 10.5px;
+      font-weight: 600; background: #f3f4f6; color: #374151;
+      padding: 2px 7px; border-radius: 4px; border: 1px solid #e5e7eb;
+    }
+
+    .analogy-box {
+      background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;
+      padding: 12px 14px; margin-top: 10px; font-size: 12px; color: #92400e;
+      line-height: 1.6;
+    }
+    .analogy-box strong { color: #78350f; }
+
+    .compare-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .compare-table th {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--gray); padding: 6px 10px;
+      border-bottom: 2px solid var(--border); text-align: left; background: #f9fafb;
+    }
+    .compare-table td {
+      font-size: 11.5px; padding: 7px 10px; border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .compare-table tr:last-child td { border: none; }
+
+    /* color accent lines on left of each card */
+    #c-skill  .concept-header { border-left: 4px solid #16a34a; }
+    #c-agent  .concept-header { border-left: 4px solid #2563eb; }
+    #c-sub    .concept-header { border-left: 4px solid #7c3aed; }
+    #c-hook   .concept-header { border-left: 4px solid #d97706; }
+
+    .highlight { background: #fef9c3; padding: 1px 3px; border-radius: 3px; }
+
+    .cc  { color: #6c7086; }  /* comment */
+    .ck  { color: #89b4fa; }  /* key/keyword */
+    .cv  { color: #a6e3a1; }  /* value/string (green) */
+    .cy  { color: #f9e2af; }  /* yellow string */
+    .cm  { color: #cba6f7; }  /* purple/mauve */
+  </style>
+
+  <div class="concept-grid">
+
+    <!-- ══ SKILLS ══ -->
+    <div class="concept-card" id="c-skill">
+      <div class="concept-header">
+        <div class="concept-icon c-green">🎯</div>
+        <div>
+          <h3>Skills — Slash Commands</h3>
+          <p>A markdown file that turns a phrase into a behavior. The bridge between your words and Claude's actions.</p>
+        </div>
+      </div>
+      <div class="concept-body">
+        <div>
+          <h4>What it is</h4>
+          <p>A <strong>skill</strong> is a <span class="file-chip">SKILL.md</span> file stored in <span class="file-chip">~/.claude/skills/{name}/</span> or <span class="file-chip">.claude/skills/{name}/</span>. When you type <code style="display:inline;background:#f3f4f6;color:#374151;padding:1px 5px;border-radius:3px;font-size:11px;">/career-ops</code> in chat, Claude finds the matching SKILL.md, loads it as instructions, and executes whatever it says.</p>
+          <p>The frontmatter at the top defines how it's exposed as a slash command:</p>
+          <code><span class="cc">---</span>
+<span class="ck">name</span>: <span class="cv">career-ops</span>
+<span class="ck">description</span>: <span class="cv">AI job search command center</span>
+<span class="ck">arguments</span>: <span class="cv">mode</span>          <span class="cc"># the $mode variable</span>
+<span class="ck">user-invocable</span>: <span class="cv">true</span>   <span class="cc"># shows up as /career-ops</span>
+<span class="ck">argument-hint</span>: <span class="cv">"[scan|pdf|oferta...]"</span>
+<span class="cc">---</span>
+
+<span class="cc"># The rest is Claude's instructions</span>
+<span class="cc"># Written in plain markdown</span>
+<span class="cc"># $mode = whatever the user typed after /career-ops</span></code>
+
+          <div class="analogy-box">
+            <strong>Analogy:</strong> A skill is like a recipe card. You hand it to a chef (Claude) and say "make this." The chef reads the instructions and decides how to execute them — they're not hard-coded steps, they're guidelines a smart agent interprets.
+          </div>
+        </div>
+        <div>
+          <h4>In career-ops</h4>
+          <p>There is <strong>one skill file</strong> for the whole system. It's a router — it reads the <span class="highlight">$mode</span> argument and decides which mode file to load next.</p>
+          <div class="pill-row">
+            <span class="pill pill-g">~/.claude/skills/career-ops/SKILL.md</span>
+            <span class="pill pill-g">.claude/skills/career-ops/SKILL.md</span>
+          </div>
+          <p style="margin-top:10px;">The skill itself doesn't contain the evaluation logic — it just says <em>"if mode is oferta, read modes/oferta.md and follow it."</em> This separation means the system logic can be updated without touching the skill definition.</p>
+          <h4 style="margin-top:14px;">Skill lookup order</h4>
+          <div class="flow-mini">
+            <span class="flow-mini-step fms-b">You type /career-ops pdf</span>
+            <span class="fms-arr">→</span>
+            <span class="flow-mini-step fms-g">Claude finds SKILL.md</span>
+            <span class="fms-arr">→</span>
+            <span class="flow-mini-step fms-p">Reads modes/pdf.md</span>
+            <span class="fms-arr">→</span>
+            <span class="flow-mini-step fms-o">Executes instructions</span>
+          </div>
+          <h4 style="margin-top:14px;">To create your own skill</h4>
+          <code><span class="cc"># 1. Create the folder</span>
+~/.claude/skills/<span class="cy">your-skill-name</span>/SKILL.md
+
+<span class="cc"># 2. Add frontmatter + instructions</span>
+<span class="ck">---</span>
+<span class="ck">name</span>: <span class="cv">your-skill-name</span>
+<span class="ck">user-invocable</span>: <span class="cv">true</span>
+<span class="ck">---</span>
+
+<span class="cc"># Your instructions here</span>
+<span class="cm">When invoked, do X, then Y, then Z.</span>
+<span class="cm">Read $arguments for user input.</span></code>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ AGENT ══ -->
+    <div class="concept-card" id="c-agent">
+      <div class="concept-header">
+        <div class="concept-icon c-blue">🧠</div>
+        <div>
+          <h3>Agent — The Main Claude Session</h3>
+          <p>The LLM running in your chat window. It reads context, uses tools, and executes your skill instructions.</p>
+        </div>
+      </div>
+      <div class="concept-body">
+        <div>
+          <h4>What it is</h4>
+          <p>The <strong>agent</strong> is the Claude model instance in your active session. It has a <em>context window</em> (everything it can "see" at once) and a <em>toolbox</em> (actions it can take).</p>
+          <p>Every time you send a message, the agent receives: your message + conversation history + any loaded files (CLAUDE.md, skills) + available tools. It reasons over all of this and decides what to do next.</p>
+
+          <h4 style="margin-top:14px;">The agent's toolbox in career-ops</h4>
+          <table class="compare-table">
+            <tr><th>Tool</th><th>What it does</th></tr>
+            <tr><td><span class="file-chip">Read</span></td><td>Reads cv.md, modes/*.md, profile.yml</td></tr>
+            <tr><td><span class="file-chip">Write</span></td><td>Saves reports, TSV files, HTML</td></tr>
+            <tr><td><span class="file-chip">Bash</span></td><td>Runs generate-pdf.mjs, merge-tracker.mjs</td></tr>
+            <tr><td><span class="file-chip">WebFetch</span></td><td>Fetches job posting pages</td></tr>
+            <tr><td><span class="file-chip">WebSearch</span></td><td>Comp research, company news</td></tr>
+            <tr><td><span class="file-chip">Agent</span></td><td>Spawns a subagent (see next card)</td></tr>
+          </table>
+        </div>
+        <div>
+          <h4>How CLAUDE.md fits in</h4>
+          <p><span class="file-chip">CLAUDE.md</span> is loaded automatically every time a session starts in the career-ops folder. It's the agent's <strong>standing instructions</strong> — always in context, always active. Think of it as the agent's job description for this project.</p>
+          <p>It tells the agent: what files to read, what rules to follow, what ethical constraints apply, and how to handle the tracker. The skill files then give mode-specific instructions on top of that foundation.</p>
+
+          <div class="analogy-box">
+            <strong>Analogy:</strong> CLAUDE.md is the employee handbook. SKILL.md is the job posting that brought you here. modes/*.md are the SOPs for each task. The agent is the employee reading all three and figuring out what to do.
+          </div>
+
+          <h4 style="margin-top:14px;">Context loading order</h4>
+          <div class="flow-mini">
+            <span class="flow-mini-step fms-b">Session starts</span>
+            <span class="fms-arr">→</span>
+            <span class="flow-mini-step fms-b">CLAUDE.md loaded</span>
+            <span class="fms-arr">→</span>
+            <span class="flow-mini-step fms-g">You invoke /career-ops</span>
+            <span class="fms-arr">→</span>
+            <span class="flow-mini-step fms-g">SKILL.md loaded</span>
+            <span class="fms-arr">→</span>
+            <span class="flow-mini-step fms-p">_shared.md + mode file loaded</span>
+            <span class="fms-arr">→</span>
+            <span class="flow-mini-step fms-p">cv.md + profile.yml read</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SUBAGENTS ══ -->
+    <div class="concept-card" id="c-sub">
+      <div class="concept-header">
+        <div class="concept-icon c-purple">🔀</div>
+        <div>
+          <h3>Subagents — Parallel Workers</h3>
+          <p>Fresh Claude instances the main agent spawns to handle heavy or parallel work, without polluting the main context.</p>
+        </div>
+      </div>
+      <div class="concept-body">
+        <div>
+          <h4>What it is</h4>
+          <p>When the main agent calls the <span class="file-chip">Agent()</span> tool, it launches a <strong>subagent</strong> — a brand-new Claude instance with its own context window. The main agent writes the subagent's entire briefing as a prompt string and injects it at startup.</p>
+          <p>Subagents are used when:</p>
+          <ul style="font-size:12.5px;color:#374151;line-height:1.9;padding-left:18px;">
+            <li>The work is too long for the main context window</li>
+            <li>Multiple tasks can run <strong>in parallel</strong> (batch mode)</li>
+            <li>A task needs Playwright browser control without blocking the main session</li>
+            <li>You want clean isolation — subagent can't accidentally see unrelated context</li>
+          </ul>
+
+          <h4 style="margin-top:14px;">The key constraint</h4>
+          <p>Subagents start <strong>cold</strong> — they know nothing except what you inject into their prompt. This is why career-ops always injects the full text of <span class="file-chip">_shared.md</span> + the mode file into every subagent call. Otherwise the subagent wouldn't know the scoring rules.</p>
+        </div>
+        <div>
+          <h4>In career-ops</h4>
+          <p>Three modes spawn subagents. Here's what the actual call looks like inside <span class="file-chip">modes/scan.md</span>:</p>
+          <code><span class="cc"># From SKILL.md — how subagents are launched</span>
+
+Agent(
+  <span class="ck">subagent_type</span>=<span class="cv">"general-purpose"</span>,
+  <span class="ck">prompt</span>=<span class="cy">"""
+[full text of modes/_shared.md]
+
+[full text of modes/scan.md]
+
+Now scan portals.yml and surface
+any new postings not in scan-history.tsv
+"""</span>,
+  <span class="ck">description</span>=<span class="cv">"career-ops scan"</span>
+)</code>
+
+          <div class="pill-row" style="margin-top:10px;">
+            <span class="pill pill-p">scan → subagent (Playwright)</span>
+            <span class="pill pill-p">apply → subagent (Playwright)</span>
+            <span class="pill pill-p">pipeline (3+ URLs) → subagent</span>
+          </div>
+
+          <h4 style="margin-top:14px;">Main agent vs subagent</h4>
+          <table class="compare-table">
+            <tr><th></th><th>Main Agent</th><th>Subagent</th></tr>
+            <tr><td>Context</td><td>Full conversation history</td><td>Only injected prompt</td></tr>
+            <tr><td>Memory</td><td>Remembers prior turns</td><td>Starts fresh every time</td></tr>
+            <tr><td>Tools</td><td>All tools</td><td>All tools (same)</td></tr>
+            <tr><td>Cost</td><td>Warm cache</td><td>Cold start</td></tr>
+            <tr><td>Use for</td><td>Orchestration, decisions</td><td>Heavy execution, parallelism</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ HOOKS ══ -->
+    <div class="concept-card" id="c-hook">
+      <div class="concept-header">
+        <div class="concept-icon c-orange">⚡</div>
+        <div>
+          <h3>Hooks — Automated Triggers</h3>
+          <p>Shell commands that fire automatically at lifecycle events — before a tool runs, after Claude responds, when a file changes.</p>
+        </div>
+      </div>
+      <div class="concept-body">
+        <div>
+          <h4>What it is</h4>
+          <p>Hooks are configured in <span class="file-chip">settings.json</span> (global: <span class="file-chip">~/.claude/settings.json</span>, project: <span class="file-chip">.claude/settings.local.json</span>). They're shell commands the <strong>harness</strong> (not Claude) executes at specific lifecycle points.</p>
+          <p>This distinction matters: <em>hooks run even if Claude doesn't decide to do something.</em> They're enforced by the runtime, not the model. That's what makes them reliable for automation.</p>
+
+          <h4 style="margin-top:14px;">Lifecycle events you can hook</h4>
+          <table class="compare-table">
+            <tr><th>Event</th><th>When it fires</th></tr>
+            <tr><td><span class="file-chip">PreToolUse</span></td><td>Before any tool call (Read, Write, Bash…)</td></tr>
+            <tr><td><span class="file-chip">PostToolUse</span></td><td>After a tool call completes</td></tr>
+            <tr><td><span class="file-chip">Stop</span></td><td>After Claude finishes a response</td></tr>
+            <tr><td><span class="file-chip">SubagentStop</span></td><td>After a subagent finishes</td></tr>
+            <tr><td><span class="file-chip">Notification</span></td><td>When Claude sends a notification</td></tr>
+          </table>
+
+          <div class="analogy-box" style="margin-top:10px;">
+            <strong>Analogy:</strong> Hooks are like triggers in a database or Git hooks in a repo. They don't ask permission — they just fire. The model can't override them.
+          </div>
+        </div>
+        <div>
+          <h4>In career-ops</h4>
+          <p>career-ops has one hook in <span class="file-chip">.claude/settings.local.json</span> — it ensures Node.js is on the PATH so scripts like <span class="file-chip">generate-pdf.mjs</span> always work:</p>
+          <code><span class="cc">// .claude/settings.local.json</span>
+{
+  <span class="ck">"permissions"</span>: {
+    <span class="ck">"allow"</span>: [
+      <span class="cy">"PowerShell($env:PATH = 'C:\\Program Files\\nodejs;' + $env:PATH; npm run doctor 2>&1)"</span>
+    ]
+  }
+}</code>
+
+          <h4 style="margin-top:14px;">Practical hook patterns</h4>
+          <code><span class="cc">// settings.json — example hooks</span>
+{
+  <span class="ck">"hooks"</span>: {
+    <span class="ck">"Stop"</span>: [{
+      <span class="ck">"command"</span>: <span class="cy">"node merge-tracker.mjs"</span>
+      <span class="cc">// auto-merges tracker after every response</span>
+    }],
+    <span class="ck">"PostToolUse"</span>: [{
+      <span class="ck">"matcher"</span>: <span class="cv">"Write"</span>,
+      <span class="ck">"command"</span>: <span class="cy">"node verify-pipeline.mjs"</span>
+      <span class="cc">// validates pipeline after every file write</span>
+    }]
+  }
+}</code>
+
+          <h4 style="margin-top:14px;">How to add one</h4>
+          <p>In this chat, just say: <em>"after every response, run node merge-tracker.mjs"</em> — the <span class="file-chip">update-config</span> skill handles writing the correct hook syntax to settings.json for you.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ HOW THEY CONNECT ══ -->
+    <div class="concept-card" style="border-color: #6366f1;">
+      <div class="concept-header" style="border-left: 4px solid #6366f1; background: #eef2ff;">
+        <div class="concept-icon" style="background:#e0e7ff; font-size:22px;">🔗</div>
+        <div>
+          <h3>How They All Connect</h3>
+          <p>A single /career-ops pipeline run touches all four concepts in sequence.</p>
+        </div>
+      </div>
+      <div style="padding: 22px;">
+        <div class="flow-mini" style="gap: 0; justify-content: center; flex-wrap: wrap;">
+          <div style="text-align:center; padding: 10px 6px; min-width: 120px;">
+            <div style="background:#dcfce7;border:1.5px solid #86efac;border-radius:8px;padding:10px 14px;">
+              <div style="font-size:9px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">🎯 Skill</div>
+              <div style="font-size:11.5px;font-weight:600;">SKILL.md</div>
+              <div style="font-size:10px;color:#4b7a5a;margin-top:2px;">defines /career-ops<br>routes $mode</div>
+            </div>
+          </div>
+          <div style="padding:10px 2px;color:#9ca3af;font-size:22px;align-self:center;">→</div>
+          <div style="text-align:center; padding: 10px 6px; min-width: 120px;">
+            <div style="background:#dbeafe;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 14px;">
+              <div style="font-size:9px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">🧠 Agent</div>
+              <div style="font-size:11.5px;font-weight:600;">Main Claude</div>
+              <div style="font-size:10px;color:#3b5fc0;margin-top:2px;">reads CLAUDE.md<br>loads mode files<br>reads cv.md + profile</div>
+            </div>
+          </div>
+          <div style="padding:10px 2px;color:#9ca3af;font-size:22px;align-self:center;">→</div>
+          <div style="text-align:center; padding: 10px 6px; min-width: 120px;">
+            <div style="background:#ede9fe;border:1.5px solid #c4b5fd;border-radius:8px;padding:10px 14px;">
+              <div style="font-size:9px;font-weight:700;color:#5b21b6;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">🔀 Subagent</div>
+              <div style="font-size:11.5px;font-weight:600;">Worker Claude</div>
+              <div style="font-size:10px;color:#6d3fb5;margin-top:2px;">spawned for scan/<br>apply/pipeline<br>cold start, isolated</div>
+            </div>
+          </div>
+          <div style="padding:10px 2px;color:#9ca3af;font-size:22px;align-self:center;">→</div>
+          <div style="text-align:center; padding: 10px 6px; min-width: 120px;">
+            <div style="background:#ffedd5;border:1.5px solid #fdba74;border-radius:8px;padding:10px 14px;">
+              <div style="font-size:9px;font-weight:700;color:#9a3412;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">⚡ Hook</div>
+              <div style="font-size:11.5px;font-weight:600;">settings.json</div>
+              <div style="font-size:10px;color:#9a3412;margin-top:2px;">fires at Stop/Write<br>runs scripts<br>harness-enforced</div>
+            </div>
+          </div>
+          <div style="padding:10px 2px;color:#9ca3af;font-size:22px;align-self:center;">→</div>
+          <div style="text-align:center; padding: 10px 6px; min-width: 120px;">
+            <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:8px;padding:10px 14px;">
+              <div style="font-size:9px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">📁 Output</div>
+              <div style="font-size:11.5px;font-weight:600;">Files on disk</div>
+              <div style="font-size:10px;color:#4b7a5a;margin-top:2px;">reports/ + output/<br>applications.md<br>tracker updated</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:24px;">
+          <table class="compare-table">
+            <thead>
+              <tr><th>Concept</th><th>Defined in</th><th>Who executes it</th><th>Can it be changed by the model?</th><th>Scope</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="pill pill-g">Skill</span></td>
+                <td><span class="file-chip">SKILL.md</span></td>
+                <td>Claude (reads + follows)</td>
+                <td>No — it reads, not writes, its own skill</td>
+                <td>Project or global</td>
+              </tr>
+              <tr>
+                <td><span class="pill pill-b">Agent</span></td>
+                <td>The session itself</td>
+                <td>Claude Code harness</td>
+                <td>N/A — it is the agent</td>
+                <td>Active session</td>
+              </tr>
+              <tr>
+                <td><span class="pill pill-p">Subagent</span></td>
+                <td>Agent() call in skill/mode</td>
+                <td>Claude (spawns it)</td>
+                <td>Yes — agent decides when to spawn</td>
+                <td>Isolated, ephemeral</td>
+              </tr>
+              <tr>
+                <td><span class="pill pill-o">Hook</span></td>
+                <td><span class="file-chip">settings.json</span></td>
+                <td>Harness (not Claude)</td>
+                <td>No — harness-enforced</td>
+                <td>Global or project</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function show(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+  }
+</script>
+
+</body>
+</html>
