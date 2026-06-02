@@ -423,10 +423,6 @@
           <span class="node-desc">Calculates overdue follow-ups from applications.md.</span>
         </div>
         <div class="node">
-          <span class="node-name">update-system.mjs</span>
-          <span class="node-desc">Checks GitHub for new releases. Applies/rolls back system updates safely.</span>
-        </div>
-        <div class="node">
           <span class="node-name">generate-latex.mjs</span>
           <span class="node-desc">LaTeX CV validator + pdflatex compiler. Alt to HTML/PDF flow.</span>
         </div>
@@ -553,17 +549,15 @@
     <div class="flow-card">
       <h3>
         <span>System Update</span>
-        <span class="flow-trigger">Trigger: session start (silent) or /career-ops update</span>
+        <span class="flow-trigger">Trigger: manual — git pull / push to pn54-boop/career-ops</span>
       </h3>
-      <p class="flow-sub">Updates Brain Layer files (modes, scripts) without touching any User Layer files.</p>
+      <p class="flow-sub">Updates are managed directly via git. Make changes locally, commit, and push to your fork. Brain Layer files update on next session; User Layer files are never touched.</p>
       <div class="pipeline">
-        <div class="step s-script"><div class="step-num">Check</div><div class="step-name">update-system check</div><div class="step-file">GitHub releases API</div></div>
+        <div class="step s-script"><div class="step-num">Edit</div><div class="step-name">Make changes locally</div><div class="step-file">modes/, templates/, scripts</div></div>
         <div class="step-arrow">→</div>
-        <div class="step s-brain"><div class="step-num">Diff</div><div class="step-name">Preview changes</div><div class="step-file">system files only</div></div>
+        <div class="step s-brain"><div class="step-num">Commit</div><div class="step-name">git commit</div><div class="step-file">describe your change</div></div>
         <div class="step-arrow">→</div>
-        <div class="step s-script"><div class="step-num">Apply</div><div class="step-name">update-system apply</div><div class="step-file">never touches user layer</div></div>
-        <div class="step-arrow">→</div>
-        <div class="step s-output"><div class="step-num">Backup</div><div class="step-name">Rollback available</div><div class="step-file">update-system rollback</div></div>
+        <div class="step s-output"><div class="step-num">Push</div><div class="step-name">git push origin main</div><div class="step-file">pn54-boop/career-ops</div></div>
       </div>
     </div>
 
@@ -713,7 +707,6 @@
       <tr><td class="file-path">modes/oferta.md</td><td><span class="file-layer fl-brain">Brain</span></td><td>A-G evaluation blocks with full scoring logic.</td><td>❌ System file</td></tr>
       <tr><td class="file-path">modes/pdf.md</td><td><span class="file-layer fl-brain">Brain</span></td><td>CV tailoring logic + HTML generation instructions.</td><td>❌ System file</td></tr>
       <tr><td class="file-path">modes/scan.md</td><td><span class="file-layer fl-brain">Brain</span></td><td>Portal scanning orchestration.</td><td>❌ System file</td></tr>
-      <tr><td class="file-path">modes/de/ fr/ ja/ etc.</td><td><span class="file-layer fl-brain">Brain</span></td><td>Localized mode files for DACH, French, Japanese job markets.</td><td>❌ System files</td></tr>
       <tr><td class="file-path">templates/cv-template.html</td><td><span class="file-layer fl-brain">Brain</span></td><td>HTML CV template with {{placeholders}}. Used by pdf mode.</td><td>✅ Edit for design changes</td></tr>
       <tr><td class="file-path">templates/cv-template.tex</td><td><span class="file-layer fl-brain">Brain</span></td><td>LaTeX/Overleaf CV template. Used when output_format: latex.</td><td>✅ Edit for LaTeX design</td></tr>
       <tr><td class="file-path">templates/states.yml</td><td><span class="file-layer fl-config">Config</span></td><td>Canonical status values for applications.md tracker.</td><td>⚠️ Edit carefully</td></tr>
@@ -724,7 +717,6 @@
       <tr><td class="file-path">verify-pipeline.mjs</td><td><span class="file-layer fl-script">Script</span></td><td>63+ health checks: report format, tracker, canonical states.</td><td>❌ System script</td></tr>
       <tr><td class="file-path">analyze-patterns.mjs</td><td><span class="file-layer fl-script">Script</span></td><td>Outputs JSON: rejection patterns, archetype hit rates, score stats.</td><td>❌ System script</td></tr>
       <tr><td class="file-path">followup-cadence.mjs</td><td><span class="file-layer fl-script">Script</span></td><td>Calculates overdue follow-ups from applications.md.</td><td>❌ System script</td></tr>
-      <tr><td class="file-path">update-system.mjs</td><td><span class="file-layer fl-script">Script</span></td><td>Check/apply/rollback system updates from GitHub.</td><td>❌ System script</td></tr>
       <tr><td class="file-path">output/*.pdf</td><td><span class="file-layer fl-output">Output</span></td><td>Tailored CVs. Gitignored. Named: cv-{name}-{company}-{date}.pdf</td><td>❌ Generated</td></tr>
       <tr><td class="file-path">reports/*.md</td><td><span class="file-layer fl-output">Output</span></td><td>Full A-G evaluation reports. Named: {###}-{company}-{date}.md</td><td>✅ Review and annotate</td></tr>
       <tr><td class="file-path">batch/tracker-additions/*.tsv</td><td><span class="file-layer fl-output">Output</span></td><td>Pending tracker rows. Run merge-tracker.mjs to apply.</td><td>❌ Auto-written by Claude</td></tr>
