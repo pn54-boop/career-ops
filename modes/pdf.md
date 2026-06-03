@@ -10,8 +10,8 @@
    - US/Canada → `letter`
    - Rest of the world → `a4`
 6. Detect role archetype → adapt framing
-7. Rewrite Professional Summary by injecting JD keywords + exit narrative bridge ("Built and sold a business. Now applying systems thinking to [JD domain].")
-8. Select top 3-4 most relevant projects for the job
+7. Rewrite Professional Summary by injecting JD keywords + exit narrative bridge. Use the appropriate summary variant from cv.md for the detected archetype (M&A/Finance-Focused, VC/Diligence-Focused, CRE-Focused, FP&A-Focused, VC/Tech-Focused, or General). Do not invent a bridge phrase — select from cv.md variants.
+8. Select top 3-4 most relevant roles/experiences for the job (Patrick has no portfolio projects — skip the Projects section entirely; use Key Metrics from cv.md in its place if space allows)
 9. Reorder experience bullets by JD relevance
 10. Build competency grid from JD requirements (6-8 keyword phrases)
 11. Inject keywords naturally into existing achievements (NEVER invent)
@@ -55,9 +55,9 @@
 ## Keyword injection strategy (ethical, truth-based)
 
 Examples of legitimate reformulation:
-- JD says "RAG pipelines" and CV says "LLM workflows with retrieval" → change to "RAG pipeline design and LLM orchestration workflows"
-- JD says "MLOps" and CV says "observability, evals, error handling" → change to "MLOps and observability: evals, error handling, cost monitoring"
-- JD says "stakeholder management" and CV says "collaborated with team" → change to "stakeholder management across engineering, operations, and business"
+- JD says "sell-side M&A" and CV says "supported full-cycle transactions" → change to "sell-side M&A execution across 18+ mandates"
+- JD says "financial modeling" and CV says "built company-specific models" → change to "financial modeling: DCF, LBO, comparable company analysis, debt capacity"
+- JD says "deal sourcing" and CV says "outbound prospecting" → change to "proprietary deal sourcing via targeted outreach campaigns"
 
 **NEVER add skills that the candidate does not have. Only reword real experience using the exact JD vocabulary.**
 

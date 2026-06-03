@@ -141,11 +141,13 @@ The HM is screening for motivation + scope fit. They've already trusted the recr
 
 ### Audience: `peer-tech`
 
-This is where the original Technical / Role-Specific buckets live. Peers are evaluating depth and collaboration on the actual stack.
+For finance/M&A/VC roles, the "technical" round is not coding — it is financial and analytical depth. Peers are evaluating whether you can do the actual work.
 
-- **Technical questions** (system design, coding, architecture, domain) — for each: the question, source, and what a strong answer looks like for this candidate specifically (reference CV proof points).
-- **Role-specific questions** tied to the JD archetype — for each: the question, why they're likely asking it (which JD requirement it maps to), and the candidate's best angle.
-- **Reverse questions** — about on-call, code review culture, deployment cadence, what surprised them when they joined.
+- **Modeling / technical finance questions** (valuation, DCF, LBO, accretion/dilution, deal structuring) — for each: the question, source, and what a strong answer looks like drawing from Patrick's actual experience.
+- **Deal/diligence questions** — walk me through a deal, how do you evaluate a business, what would you look for in this sector. Source from article-digest.md deal stories.
+- **Case/situational questions** — how would you analyze this company, what's missing from this CIM, is this a good deal at $X multiple. Prep frameworks, not scripted answers.
+- **Role-specific questions** tied to the JD archetype — for each: why they're asking it (which JD requirement it maps to) and Patrick's best angle.
+- **Reverse questions** — about deal flow, team structure, how analysts are staffed on deals, what a typical first 90 days looks like.
 
 ### Audience: `panel-mixed`
 
