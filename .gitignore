@@ -2,6 +2,7 @@
 cv.md
 data/applications.md
 data/scan-history.tsv
+data/ingest-queue.tsv
 data/parser-output/**/*.json
 !data/parser-output/.gitkeep
 !data/parser-output/**/.gitkeep

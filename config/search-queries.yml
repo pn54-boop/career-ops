@@ -1,0 +1,109 @@
+# Search Query Configuration — Job Ingestion
+# Used by ingest.mjs and /career-ops ingest to pull job listings from multiple boards.
+#
+# LinkedIn note: LinkedIn has no public RSS or API. Job alert emails are the
+# only automated path. Set up a LinkedIn job alert for each query below at:
+# https://www.linkedin.com/jobs/search/ → Save Search → Daily alert
+# The email-manager agent processes these automatically each morning.
+#
+# To add a new query: copy an existing entry, change label + terms + location.
+# To disable a query: set enabled: false
+
+queries:
+  - label: "Investment Banking Analyst"
+    terms: "investment banking analyst"
+    location: "United States"
+    enabled: true
+
+  - label: "Investment Banking Associate"
+    terms: "investment banking associate"
+    location: "United States"
+    enabled: true
+
+  - label: "M&A Analyst"
+    terms: "mergers acquisitions analyst"
+    location: "United States"
+    enabled: true
+
+  - label: "M&A Associate"
+    terms: "mergers acquisitions associate"
+    location: "United States"
+    enabled: true
+
+  - label: "Private Equity Analyst"
+    terms: "private equity analyst"
+    location: "United States"
+    enabled: true
+
+  - label: "Private Equity Associate"
+    terms: "private equity associate"
+    location: "United States"
+    enabled: true
+
+  - label: "Venture Capital Analyst"
+    terms: "venture capital analyst"
+    location: "United States"
+    enabled: true
+
+  - label: "VC Associate"
+    terms: "venture capital associate"
+    location: "United States"
+    enabled: true
+
+  - label: "Investment Analyst"
+    terms: "investment analyst finance"
+    location: "United States"
+    enabled: true
+
+  - label: "Financial Analyst Deal"
+    terms: "financial analyst transactions deal"
+    location: "United States"
+    enabled: true
+
+  - label: "Business Development Finance"
+    terms: "business development analyst finance investment"
+    location: "United States"
+    enabled: true
+
+  - label: "Strategy Analyst Small Company"
+    terms: "strategy analyst associate small company"
+    location: "United States"
+    enabled: true
+
+  - label: "Generalist Analyst"
+    terms: "generalist analyst associate investment firm"
+    location: "United States"
+    enabled: true
+
+  - label: "Deal Sourcing Analyst"
+    terms: "deal sourcing analyst associate"
+    location: "United States"
+    enabled: true
+
+  - label: "Portfolio Company Analyst"
+    terms: "portfolio company analyst associate operating"
+    location: "United States"
+    enabled: true
+
+# Board configuration
+# RSS templates use {terms} and {location} as placeholders
+# fromage = days back to search
+
+boards:
+  indeed:
+    enabled: true
+    rss_template: "https://www.indeed.com/rss?q={terms}&l={location}&sort=date&fromage=7"
+
+  ziprecruiter:
+    enabled: true
+    rss_template: "https://www.ziprecruiter.com/jobs/feed.rss?q={terms}&l={location}&days=7"
+
+  simplyhired:
+    enabled: true
+    rss_template: "https://www.simplyhired.com/search?q={terms}&l={location}&job_age=7&format=rss"
+
+# LinkedIn — email alerts only (no RSS/API available)
+# Set up alerts at: https://www.linkedin.com/jobs/search/
+# Email-manager processes these automatically each morning.
+linkedin:
+  note: "Set up LinkedIn job alerts for each query above. Email-manager handles them automatically."
