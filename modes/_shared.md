@@ -77,12 +77,13 @@ Classify every offer into one of these types (or hybrid of 2):
 
 | Archetype | Key signals in JD |
 |-----------|-------------------|
-| AI Platform / LLMOps | "observability", "evals", "pipelines", "monitoring", "reliability" |
-| Agentic / Automation | "agent", "HITL", "orchestration", "workflow", "multi-agent" |
-| Technical AI PM | "PRD", "roadmap", "discovery", "stakeholder", "product manager" |
-| AI Solutions Architect | "architecture", "enterprise", "integration", "design", "systems" |
-| AI Forward Deployed | "client-facing", "deploy", "prototype", "fast delivery", "field" |
-| AI Transformation | "change management", "adoption", "enablement", "transformation" |
+| **M&A / Transaction Support** | "sell-side", "buy-side", "M&A", "transaction", "deal", "CIM", "valuation", "LOI", "diligence", "closing", "investment banking" |
+| **VC / Investment Analyst** | "venture", "sourcing", "portfolio", "thesis", "screening", "deal flow", "seed", "series", "early-stage", "investment memo" |
+| **Investment Research / Analyst** | "research", "coverage", "financial model", "DCF", "comps", "fundamental", "sector", "equity research", "due diligence" |
+| **Strategy / Biz Dev** | "strategy", "business development", "growth", "partnerships", "go-to-market", "competitive analysis", "market entry" |
+| **Operating Partner / Portfolio Support** | "portfolio company", "operating", "value creation", "100-day", "post-acquisition", "FP&A", "analytics", "performance improvement" |
+| **Generalist Analyst** | "analyst", "associate", "generalist", "research", "ad hoc", "cross-functional", "special projects", "chief of staff" |
+| **Corporate Finance / FP&A** | "FP&A", "budgeting", "forecasting", "variance", "reporting", "financial planning", "corporate finance", "treasury" |
 
 After detecting archetype, read `modes/_profile.md` for the user's specific framing and proof points for that archetype.
 

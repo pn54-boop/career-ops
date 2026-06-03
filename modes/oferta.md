@@ -25,12 +25,13 @@ Table with:
 Read `cv.md`. Create a table with each JD requirement mapped to exact lines in the CV.
 
 **Adapted to the archetype:**
-- If FDE → prioritize delivery speed and client-facing proof points
-- If SA → prioritize system design and integrations
-- If PM → prioritize product discovery and metrics
-- If LLMOps → prioritize evals, observability, pipelines
-- If Agentic → prioritize multi-agent, HITL, orchestration
-- If Transformation → prioritize change management, adoption, scaling
+- If M&A / Transaction → prioritize Viking (18+ mandates, 100+ models, CIMs, full-cycle process ownership)
+- If VC / Investment → prioritize MVP Ventures (300+ sourced, 30+ investments) + Spike (100+ evaluated, $1M+ raised)
+- If Investment Research → prioritize modeling depth (DCF, LBO, comps, debt capacity) + Viking analytical volume
+- If Strategy / Biz Dev → prioritize pattern recognition across 300+ deals + independent problem-solving (Bulldog)
+- If Operating Partner → prioritize Viking deal diagnostics + Bulldog multi-client independence + Python workflow
+- If Generalist → prioritize Yale + D-I athlete + breadth of experience + independent consulting
+- If Corporate Finance / FP&A → prioritize pro forma projections, variance analysis, debt capacity models, reporting
 
 **Gaps** section with mitigation strategy for each. For each gap:
 1. Is it a hard blocker or a nice-to-have?
@@ -74,12 +75,13 @@ The **Reflection** column captures what was learned or what would be done differ
 **Story Bank:** If `interview-prep/story-bank.md` exists, check if any of these stories are already there. If not, append new ones. Over time this builds a reusable bank of 5-10 master stories that can be adapted to any interview question.
 
 **Selected and framed according to the archetype:**
-- FDE → emphasize delivery speed and client-facing
-- SA → emphasize architectural decisions
-- PM → emphasize discovery and trade-offs
-- LLMOps → emphasize metrics, evals, production hardening
-- Agentic → emphasize orchestration, error handling, HITL
-- Transformation → emphasize adoption, organizational change
+- M&A / Transaction → emphasize full-cycle deal ownership, buyer qualification judgment, 15-month deal story
+- VC / Investment → emphasize Dataminr sourcing story, EV pass (intellectual honesty), 300+ screen volume
+- Investment Research → emphasize modeling depth, framework thinking, Yale first-principles reasoning
+- Strategy / Biz Dev → emphasize pattern recognition, independent problem-solving, Python scraper resourcefulness
+- Operating Partner → emphasize Viking deal diagnostics, Bulldog multi-client independence, figure-it-out-alone story
+- Generalist → emphasize D-I athlete discipline, breadth, ownership under ambiguity
+- Corporate Finance / FP&A → emphasize pro forma models, debt capacity work, cross-functional coordination
 
 Also include:
 - 1 recommended case study (which of their projects to present and how)
