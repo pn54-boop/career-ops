@@ -13,14 +13,16 @@
 | File | Path | When |
 |------|------|------|
 | cv.md | `cv.md` (project root) | ALWAYS |
-| article-digest.md | `article-digest.md` (if exists) | ALWAYS (detailed proof points) |
 | profile.yml | `config/profile.yml` | ALWAYS (candidate identity and targets) |
 | _profile.md | `modes/_profile.md` | ALWAYS (user archetypes, narrative, negotiation) |
+| article-digest.md | `article-digest.md` (if exists) | **Only if global score ≥ 3.5** — load before generating Block F (interview plan) or PDF. Skip entirely for roles scoring below 3.5. |
+| cv-template.html | `templates/cv-template.html` | **Only at PDF generation step** — do not load during evaluation. |
 | writing-samples/ | `writing-samples/` | When generating candidate-facing text — check `_profile.md` for cached `## Writing Style` first; only scan files if absent |
 
 **RULE: NEVER hardcode metrics from proof points.** Read them from cv.md + article-digest.md at evaluation time.
 **RULE: For article/project metrics, article-digest.md takes precedence over cv.md.**
 **RULE: Read _profile.md AFTER this file. User customizations in _profile.md override defaults here.**
+**RULE: Do not load article-digest.md or cv-template.html upfront. Load them lazily per the conditions above.**
 
 ---
 
@@ -103,7 +105,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 ### ALWAYS
 
 0. **Cover letter:** If the form allows it, ALWAYS include one. Same visual design as CV. JD quotes mapped to proof points. 1 page max.
-1. Read cv.md, _profile.md, and article-digest.md (if exists) before evaluating
+1. Read cv.md and _profile.md before evaluating. Read article-digest.md only if score ≥ 3.5 (before Block F and PDF). Do not load cv-template.html until the PDF step.
 1b. **First evaluation of each session:** Run `node cv-sync-check.mjs`. If warnings, notify user.
 2. Detect the role archetype and adapt framing per _profile.md
 3. Cite exact lines from CV when matching

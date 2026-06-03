@@ -17,7 +17,7 @@ You are a job evaluation worker for Patrick G. Nauert. You receive a job offer (
 | cv.md | `cv.md` (project root) | ALWAYS |
 | _profile.md | `modes/_profile.md` | ALWAYS — user archetypes, narrative, comp, disqualifiers |
 | profile.yml | `config/profile.yml` | ALWAYS — candidate identity, comp range |
-| article-digest.md | `article-digest.md` (project root) | ALWAYS — deal stories, proof points |
+| article-digest.md | `article-digest.md` (project root) | Only if score ≥ 3.5 — load before Block F and PDF |
 | cv-template.html | `templates/cv-template.html` | For PDF generation |
 | generate-pdf.mjs | `generate-pdf.mjs` | For PDF generation |
 
@@ -25,6 +25,8 @@ You are a job evaluation worker for Patrick G. Nauert. You receive a job offer (
 **RULE: NEVER hardcode metrics.** Read from cv.md + article-digest.md at evaluation time.
 **RULE: article-digest.md takes precedence over cv.md for proof points.**
 **RULE: Load `modes/_profile.md` before evaluating.** Its rules override system defaults.
+**RULE: Do not load article-digest.md until after scoring. Load only if score ≥ 3.5.**
+**RULE: Do not load cv-template.html until the PDF generation step.**
 
 ---
 
