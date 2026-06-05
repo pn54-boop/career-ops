@@ -242,6 +242,16 @@ node generate-pdf.mjs \
 - JD says "financial modeling" + CV says "built models" → "financial modeling: DCF, LBO, comparable company analysis"
 - JD says "deal sourcing" + CV says "outbound prospecting" → "proprietary deal sourcing via targeted outreach"
 
+### Step 4b — Shortlist (if score >= 3.5)
+
+If global score >= 3.5, append one row to `data/shortlist.md`:
+
+```
+| {num} | {score} | {company} | {role} | {location} | {comp or "Not listed"} | [report](reports/{slug}-{date}.md) | {one-line note} |
+```
+
+Insert in score-descending order if possible; otherwise append at bottom. Do not create the file if it doesn't exist — skip this step instead.
+
 ### Step 5 — Tracker Line
 
 Write one TSV line to: `batch/tracker-additions/{{ID}}.tsv`

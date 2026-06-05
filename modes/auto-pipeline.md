@@ -85,6 +85,13 @@ If the final score is >= 4.5, generate a draft of responses for the application 
 
 **Language**: Always in the language of the JD (EN default).
 
+## Step 4c — Shortlist (if score >= 3.5)
+
+If global score >= 3.5 and `data/shortlist.md` exists, append one row to the table:
+```
+| {num} | {score} | {company} | {role} | {location} | {comp or "Not listed"} | [report](reports/...) | {one-line note} |
+```
+
 ## Step 5 — Update Tracker
 
 Record it in `data/applications.md` with all columns including Report and PDF as ✅ or ❌.
